@@ -78,27 +78,35 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
         return i$3 `
       ha-card {
         padding: 16px;
+        background-color: black;
+      }
+      h2 {
+        margin-bottom: 8px;
+      }
+      .gradient-bar {
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(to right, black, rgba(255, 255 ,255, 0.3), black);
+        margin-bottom: 16px;
       }
       .timeline {
         display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
         overflow-x: auto;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        background-color: #f9f9f9;
+        justify-content: space-between;
       }
       .timeline-item {
         flex: 0 0 auto;
         text-align: center;
-        margin-right: 16px;
-        padding: 8px;
-        border-radius: 4px;
-        background-color: #ffffff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        min-width: 100px;
+        min-width: 70px;
         display: flex;
         flex-direction: column;
         align-items: center;
+      }
+  
+      .condition {
+        height: 40%;
       }
       .condition img {
         width: 40px;
@@ -114,6 +122,12 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
       }
       .details .temperature {
         color: #ff5722;
+      }
+      .details .temperature.cold {
+        color: #2196f3; /* Blu */
+      }
+      .details .temperature.hot {
+        color: #f44336; /* Rosso */
       }
     `;
     }
@@ -167,29 +181,34 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
     }
     render() {
         const hourlyForecast = this.getHourlyForecast();
+        const limitedForecast = hourlyForecast.slice(0, 12); // Prendi i primi 12 elementi
         let previousCondition = ''; // Variabile per tenere traccia della condizione precedente
         return x `
       <ha-card>
         <h1>Previsioni Meteo</h1>
         <h2>Orarie</h2>
+        <div class="gradient-bar"></div>
         <div class="timeline">
-          ${hourlyForecast.length > 0
-            ? hourlyForecast.map((f, index) => {
+          ${limitedForecast.length > 0
+            ? limitedForecast.map((f, index) => {
                 const showCondition = f.condition !== previousCondition;
                 previousCondition = f.condition; // Aggiorna la condizione precedente
-                // Ottieni l'icona corrispondente alla condizione
                 const icon = ScreensaverCard_1.weatherIconsDay[f.condition] || 'unknown';
-                console.log(icon);
+                const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
+                // Classi dinamiche per la temperatura
+                const temperatureClass = f.temperature < 10 ? 'cold' : f.temperature > 25 ? 'hot' : '';
                 return x `
                   <div class="timeline-item">
                     ${showCondition
-                    ? x `<div class="condition">
-                          <img src="./icons/${icon}.svg" alt="${f.condition}" />
-                        </div>`
+                    ? x `
+                          <div class="condition">
+                            <img src="${iconUrl}" alt="${f.condition}" />
+                          </div>
+                        `
                     : x `<div class="condition"></div>`}
                     <div class="details">
                       <div class="hour">${new Date(f.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
-                      <div class="temperature">${f.temperature}°C</div>
+                      <div class="temperature ${temperatureClass}">${f.temperature}°C</div>
                     </div>
                   </div>
                 `;

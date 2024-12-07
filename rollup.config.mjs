@@ -5,6 +5,7 @@ import babel from "@rollup/plugin-babel";
 import terser from "@rollup/plugin-terser";
 import serve from "rollup-plugin-serve";
 import json from "@rollup/plugin-json";
+// import copy from 'rollup-plugin-copy';
 
 const dev = process.env.ROLLUP_WATCH;
 
@@ -40,3 +41,20 @@ export default [
         plugins: [...plugins],
     },
 ];
+
+// export default {
+//     input: 'src/screensaver-card.ts',
+//     output: {
+//       dir: 'dist',
+//       format: 'es',
+//     },
+//     plugins: [
+//       // Altri plugin Rollup
+//       copy({
+//         targets: [
+//           { src: 'icons', dest: 'dist' } // Copia la cartella icons nella directory dist
+//         ],
+//       }),
+//     ],
+//   };
+
