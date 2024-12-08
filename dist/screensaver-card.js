@@ -129,6 +129,10 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
       .details .temperature.hot {
         color: #f44336; /* Rosso */
       }
+      .details .precipitation {
+      color: #9e9e9e; /* Grigio */
+      font-size: 0.8em;
+      }
     `;
     }
     setConfig(config) {
@@ -195,7 +199,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
                 previousCondition = f.condition; // Aggiorna la condizione precedente
                 const icon = ScreensaverCard_1.weatherIconsDay[f.condition] || 'unknown';
                 const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
-                // Classi dinamiche per la temperatura
                 const temperatureClass = f.temperature < 10 ? 'cold' : f.temperature > 25 ? 'hot' : '';
                 return x `
                   <div class="timeline-item">
@@ -209,6 +212,9 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
                     <div class="details">
                       <div class="hour">${new Date(f.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       <div class="temperature ${temperatureClass}">${f.temperature}°C</div>
+                      ${f.precipitation !== 0
+                    ? x `<div class="precipitation">${f.precipitation} mm</div>`
+                    : ''}
                     </div>
                   </div>
                 `;

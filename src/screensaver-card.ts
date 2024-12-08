@@ -84,6 +84,10 @@ export class ScreensaverCard extends LitElement {
       .details .temperature.hot {
         color: #f44336; /* Rosso */
       }
+      .details .precipitation {
+      color: #9e9e9e; /* Grigio */
+      font-size: 0.8em;
+      }
     `;
   }
 
@@ -151,7 +155,7 @@ export class ScreensaverCard extends LitElement {
     const hourlyForecast = this.getHourlyForecast();
     const limitedForecast = hourlyForecast.slice(0, 12); // Prendi i primi 12 elementi
     let previousCondition = ''; // Variabile per tenere traccia della condizione precedente
-
+  
     return html`
       <ha-card>
         <h1>Previsioni Meteo</h1>
@@ -162,14 +166,13 @@ export class ScreensaverCard extends LitElement {
             ? limitedForecast.map((f: any, index: number) => {
                 const showCondition = f.condition !== previousCondition;
                 previousCondition = f.condition; // Aggiorna la condizione precedente
-
+  
                 const icon = ScreensaverCard.weatherIconsDay[f.condition] || 'unknown';
                 const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
-
-                // Classi dinamiche per la temperatura
+  
                 const temperatureClass =
                   f.temperature < 10 ? 'cold' : f.temperature > 25 ? 'hot' : '';
-
+  
                 return html`
                   <div class="timeline-item">
                     ${showCondition
@@ -182,6 +185,9 @@ export class ScreensaverCard extends LitElement {
                     <div class="details">
                       <div class="hour">${new Date(f.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                       <div class="temperature ${temperatureClass}">${f.temperature}°C</div>
+                      ${f.precipitation !== 0
+                        ? html`<div class="precipitation">${f.precipitation} mm</div>`
+                        : ''}
                     </div>
                   </div>
                 `;
