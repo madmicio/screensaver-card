@@ -74,11 +74,30 @@ const t=t=>(e,o)=>{void 0!==o?o.addInitializer((()=>{customElements.define(t,e);
 
 var ScreensaverCard_1;
 let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
+    loadLocalFont(scriptDirectory, path) {
+        const style = document.createElement("style");
+        style.textContent = `
+      @font-face {
+        font-family: 'displayFont';
+        src: url('${scriptDirectory}/DS-DIGII.TTF') format('truetype');
+      }
+
+      
+      
+    `;
+        document.head.appendChild(style);
+    }
     static get styles() {
         return i$3 `
       ha-card {
         padding: 16px;
         background-color: black;
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        // justify-content: center;
+        // align-items: center;
+        flex-direction: column;
       }
       h2 {
         margin-bottom: 8px;
@@ -95,6 +114,8 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
         gap: 16px;
         overflow-x: auto;
         justify-content: space-between;
+        // background-color: red;
+        height: 12vh;
       }
       .timeline-item {
         flex: 0 0 auto;
@@ -133,6 +154,42 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
       color: #9e9e9e; /* Grigio */
       font-size: 0.8em;
       }
+
+      .main {
+            position: relative;
+            width: 100%;
+            height: 88vh;
+            background-color: black;
+        }
+        .time {
+          position: absolute;
+          width: 50vh;
+          // aspect-ratio: 3/2;
+          // background-color: red;
+          top: 50%;
+          left: 5%;
+          font-family: displayFont;
+        }
+        .box {
+            position: absolute;
+            width: 200px;
+            height: 100px;
+        }
+        #box1 {
+            background-color: yellow;
+            top: 10%;
+            left: 10%;
+        }
+        // #time {
+        //     background-color: red;
+        //     top: 50%;
+        //     left: 40%;
+        }
+        #box3 {
+            background-color: green;
+            bottom: 10%;
+            right: 10%;
+        }
     `;
     }
     setConfig(config) {
@@ -185,12 +242,25 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends r$2 {
     }
     render() {
         const hourlyForecast = this.getHourlyForecast();
-        const limitedForecast = hourlyForecast.slice(0, 12); // Prendi i primi 12 elementi
+        const limitedForecast = hourlyForecast.slice(0, 16); // Prendi i primi 12 elementi
         let previousCondition = ''; // Variabile per tenere traccia della condizione precedente
         return x `
       <ha-card>
-        <h1>Previsioni Meteo</h1>
-        <h2>Orarie</h2>
+        <div class="main">
+          <div id="box1" class="box"></div>
+          <svg version="1.1" id="Livello_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+            viewBox="0 0 740 350" style="enable-background:new 0 0 740 350;" class="time" xml:space="preserve">
+          <style type="text/css">
+            .st0{fill:#FFFFFF;}
+            .st1{font-family:'BwModelicaSS01DEMO-HairlineExpanded';}
+            .st2{font-size:85.0155px;}
+            .st3{font-size:300px;}
+          </style>
+          <text id="data" transform="matrix(1 0 0 1 0.4752 344.3511)" class="st0 st1 st2">dom : 08 : 12 : 24</text>
+          <text id="orologio" transform="matrix(1 0 0 1 0.4749 226.6919)" class="st0 st1 st3">13:59</text>
+          </svg>
+          <div id="box3" class="box"></div>
+        </div>
         <div class="gradient-bar"></div>
         <div class="timeline">
           ${limitedForecast.length > 0
