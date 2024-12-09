@@ -11,15 +11,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow initializing variables to `undefined`",
+            description: "disallow initializing variables to `undefined`",
+            category: "Variables",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-undef-init"
+            url: "https://eslint.org/docs/rules/no-undef-init"
         },
 
         schema: [],
@@ -32,14 +32,14 @@ module.exports = {
 
     create(context) {
 
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         return {
 
             VariableDeclarator(node) {
                 const name = sourceCode.getText(node.id),
                     init = node.init && node.init.name,
-                    scope = sourceCode.getScope(node),
+                    scope = context.getScope(),
                     undefinedVar = astUtils.getVariableByName(scope, "undefined"),
                     shadowed = undefinedVar && undefinedVar.defs.length > 0,
                     lastToken = sourceCode.getLastToken(node);

@@ -42,15 +42,15 @@ function isInitialized(node) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Require or disallow initialization in variable declarations",
+            description: "require or disallow initialization in variable declarations",
+            category: "Variables",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/init-declarations"
+            url: "https://eslint.org/docs/rules/init-declarations"
         },
 
         schema: {

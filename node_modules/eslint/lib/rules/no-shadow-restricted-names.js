@@ -21,15 +21,15 @@ function safelyShadowsUndefined(variable) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow identifiers from shadowing restricted names",
+            description: "disallow identifiers from shadowing restricted names",
+            category: "Variables",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-shadow-restricted-names"
+            url: "https://eslint.org/docs/rules/no-shadow-restricted-names"
         },
 
         schema: [],
@@ -43,11 +43,10 @@ module.exports = {
 
 
         const RESTRICTED = new Set(["undefined", "NaN", "Infinity", "arguments", "eval"]);
-        const sourceCode = context.sourceCode;
 
         return {
             "VariableDeclaration, :function, CatchClause"(node) {
-                for (const variable of sourceCode.getDeclaredVariables(node)) {
+                for (const variable of context.getDeclaredVariables(node)) {
                     if (variable.defs.length > 0 && RESTRICTED.has(variable.name) && !safelyShadowsUndefined(variable)) {
                         context.report({
                             node: variable.defs[0].name,

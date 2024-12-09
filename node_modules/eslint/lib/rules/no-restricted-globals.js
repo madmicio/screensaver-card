@@ -8,15 +8,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow specified global variables",
+            description: "disallow specified global variables",
+            category: "Variables",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-restricted-globals"
+            url: "https://eslint.org/docs/rules/no-restricted-globals"
         },
 
         schema: {
@@ -43,14 +43,12 @@ module.exports = {
 
         messages: {
             defaultMessage: "Unexpected use of '{{name}}'.",
-            // eslint-disable-next-line eslint-plugin/report-message-format -- Custom message might not end in a period
+            // eslint-disable-next-line eslint-plugin/report-message-format
             customMessage: "Unexpected use of '{{name}}'. {{customMessage}}"
         }
     },
 
     create(context) {
-
-        const sourceCode = context.sourceCode;
 
         // If no globals are restricted, we don't need to do anything
         if (context.options.length === 0) {
@@ -101,8 +99,8 @@ module.exports = {
         }
 
         return {
-            Program(node) {
-                const scope = sourceCode.getScope(node);
+            Program() {
+                const scope = context.getScope();
 
                 // Report variables declared elsewhere (ex: variables defined as "global" by eslint)
                 scope.variables.forEach(variable => {

@@ -122,15 +122,15 @@ function endsWithTemplateCurly(node) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Require template literals instead of string concatenation",
+            description: "require template literals instead of string concatenation",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/prefer-template"
+            url: "https://eslint.org/docs/rules/prefer-template"
         },
 
         schema: [],
@@ -142,7 +142,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
         let done = Object.create(null);
 
         /**
@@ -188,7 +188,7 @@ module.exports = {
                 return sourceCode.getText(currentNode);
             }
 
-            if (isConcatenation(currentNode) && hasStringLiteral(currentNode)) {
+            if (isConcatenation(currentNode) && hasStringLiteral(currentNode) && hasNonStringLiteral(currentNode)) {
                 const plusSign = sourceCode.getFirstTokenBetween(currentNode.left, currentNode.right, token => token.value === "+");
                 const textBeforePlus = getTextBetween(currentNode.left, plusSign);
                 const textAfterPlus = getTextBetween(plusSign, currentNode.right);

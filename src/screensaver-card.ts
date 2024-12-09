@@ -1,6 +1,7 @@
 import { css, html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { HomeAssistant } from 'custom-card-helpers';
+import { HomeAssistant, stateIcon } from 'custom-card-helpers';
+
 
 @customElement('screensaver-card')
 export class ScreensaverCard extends LitElement {
@@ -9,16 +10,16 @@ export class ScreensaverCard extends LitElement {
 
   @state() private hourlyForecastEvent?: any;
   @state() private subscribedToHourlyForecast?: Promise<() => void>;
+
   private loadLocalFont(scriptDirectory: string, path: string) {
     const style = document.createElement("style");
     style.textContent = `
       @font-face {
         font-family: 'displayFont';
-        src: url('${scriptDirectory}/DS-DIGII.TTF') format('truetype');
+        src: url('${scriptDirectory}/local/BwModelica-HairlineExpanded.otf') format('truetype');
       }
 
-      
-      
+     
     `;
     document.head.appendChild(style);
 
@@ -42,6 +43,14 @@ export class ScreensaverCard extends LitElement {
     "windy-variant": "windy-variant",
     exceptional: "!!",
   };
+
+  constructor() {
+    super();
+    const scriptPath = new URL(import.meta.url).pathname;
+    const scriptDirectory = scriptPath.substring(0, scriptPath.lastIndexOf('/'));
+    this.loadLocalFont(scriptDirectory, scriptPath);
+    console.log('Font path:', `${scriptDirectory}/DS-DIGII.TTF`);
+}
 
   static get styles() {
     return css`
@@ -117,34 +126,113 @@ export class ScreensaverCard extends LitElement {
             height: 88vh;
             background-color: black;
         }
+        #date-time {
+        position: absolute;
+        bottom: 14%;
+        left: 5%;
+        font-family: displayFont, monospace; /* Usa un font monospaziato per numeri uniformi */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        /* Imposta una larghezza fissa */
+        width: 67vh;
+        }
+
+        .time,
+        .date {
+          
+          width: 100%;
+          text-align: center;
+          font-family: displayFont, monospace;
+
+          
+          line-height: 1;
+        }
+
+
         .time {
-          position: absolute;
-          width: 50vh;
-          // aspect-ratio: 3/2;
-          // background-color: red;
-          top: 50%;
-          left: 5%;
-          font-family: displayFont;
+          font-size: 13vw; 
+          white-space: nowrap; 
+        }
+
+
+        .date {
+          font-size: 4.5vw;
+          white-space: nowrap; 
         }
         .box {
             position: absolute;
-            width: 200px;
-            height: 100px;
+
         }
+       
+
         #box1 {
-            background-color: yellow;
-            top: 10%;
-            left: 10%;
+        bottom: 14.5%;
+        left: 77%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 16px;
+        color: var(--primary-text-color);
+
+      }
+
+      .entity {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 4px 8px;
+        // background: var(--card-background-color);
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-family: displayFont, monospace;
+      }
+
+      .friendly-name {
+        font-weight: bold;
+        display: flex;
+        justify-content: flex-end;
+      }
+        .value {
+        display: flex;
+        font-size: 2vh;
+        margin-top: 0.5vh;
         }
+
+      .state {
+        margin-left: auto;
+        margin-right: 4px;
+      }
+
+      .unit {
+        font-style: italic;
+        color: var(--secondary-text-color);
+      }
         // #time {
         //     background-color: red;
         //     top: 50%;
         //     left: 40%;
         }
+        // #box3 {
+        //     background-color: green;
+        //     bottom: 10%;
+        //     right: 10%;
+        // }
         #box3 {
-            background-color: green;
-            bottom: 10%;
-            right: 10%;
+          top: 5%;
+          left: 7%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          flex-wrap: wrap; /* Per andare a capo se ci sono molte icone */
+          gap: 8px; /* Spazio tra le icone */
+        }
+
+        ha-icon {
+          --mdc-icon-size: 4.5vh; /* Dimensione delle icone */
+          color: var(--primary-text-color); /* Colore personalizzato */
         }
     `;
   }
@@ -183,6 +271,8 @@ export class ScreensaverCard extends LitElement {
     );
   }
 
+ 
+
   private unsubscribeHourlyForecast() {
     if (this.subscribedToHourlyForecast) {
       this.subscribedToHourlyForecast.then((unsub) => unsub());
@@ -213,23 +303,94 @@ export class ScreensaverCard extends LitElement {
     const hourlyForecast = this.getHourlyForecast();
     const limitedForecast = hourlyForecast.slice(0, 16); // Prendi i primi 12 elementi
     let previousCondition = ''; // Variabile per tenere traccia della condizione precedente
-  
+    const currentHour = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    // Ottieni la lingua configurata in Home Assistant o usa 'en-US' come fallback
+    const language = this.hass?.locale?.language || 'en-US';
+
+    // Ottieni i componenti della data
+    const now = new Date();
+    const dayName = now.toLocaleDateString(language, { weekday: 'short' }); // Giorno della settimana
+    const day = now.toLocaleDateString(language, { day: '2-digit' });       // Giorno
+    const month = now.toLocaleDateString(language, { month: '2-digit' });   // Mese
+    const year = now.toLocaleDateString(language, { year: '2-digit' });     // Anno
+
+    // Combina i componenti con il separatore ` : `
+    const formattedDate = `${dayName} : ${day} : ${month} : ${year}`;
+    const entityIcons = this.config?.entity_icon || [];
+    const valueEntities = this.config?.value_entity || [];
+
     return html`
       <ha-card>
         <div class="main">
-          <div id="box1" class="box"></div>
-          <svg version="1.1" id="Livello_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-            viewBox="0 0 740 350" style="enable-background:new 0 0 740 350;" class="time" xml:space="preserve">
-          <style type="text/css">
-            .st0{fill:#FFFFFF;}
-            .st1{font-family:'BwModelicaSS01DEMO-HairlineExpanded';}
-            .st2{font-size:85.0155px;}
-            .st3{font-size:300px;}
-          </style>
-          <text id="data" transform="matrix(1 0 0 1 0.4752 344.3511)" class="st0 st1 st2">dom : 08 : 12 : 24</text>
-          <text id="orologio" transform="matrix(1 0 0 1 0.4749 226.6919)" class="st0 st1 st3">13:59</text>
-          </svg>
-          <div id="box3" class="box"></div>
+          
+        <div id="box1" class="box">
+        ${valueEntities.length > 0
+          ? valueEntities.map((entityId: string) => {
+              // Ottieni lo stato dell'entità
+              const entityState = this.hass.states[entityId];
+
+              // Verifica se l'entità esiste
+              if (!entityState) {
+                return html`<div>Entità non trovata: ${entityId}</div>`;
+              }
+
+              // Estrai il friendly_name, lo stato e l'unit_of_measurement
+              const friendlyName = entityState.attributes.friendly_name || entityId;
+              const state = entityState.state;
+              const unit = entityState.attributes.unit_of_measurement || '';
+
+              return html`
+                <div class="entity">
+                  <span class="friendly-name">${friendlyName}</span>
+                  <div class="value">
+                    <span class="state">${state}</span>
+                    <span class="unit">${unit}</span>
+                  </div>
+                </div>
+              `;
+            })
+          : html`<div>Nessuna entità configurata</div>`}
+      </div>
+
+
+
+
+          <div id="date-time">
+            <div class="time">${currentHour}</div>
+            <div class="date">${formattedDate}</div>
+
+          </div>
+          
+      <div id="box3" class="box">
+        ${entityIcons.length > 0
+          ? entityIcons.map((entityConfig: any) => {
+              // Estrai l'ID dell'entità e l'icona personalizzata
+              const entityId = entityConfig.entity;
+              const customIcon = entityConfig.icon;
+
+              // Ottieni lo stato dell'entità da Home Assistant
+              const entityState = this.hass.states[entityId];
+
+              // Controlla se l'entità esiste e il suo stato è "on"
+              if (!entityState || entityState.state !== 'on') {
+                return ''; // Non renderizzare nulla se l'entità non è "on"
+              }
+
+              // Usa l'icona configurata oppure quella predefinita di Home Assistant
+              const icon = customIcon || entityState.attributes.icon;
+
+              return html`
+                <ha-icon
+                  .icon="${icon}"
+                  style="margin: 0 8px; font-size: 24px;"
+                  title="${entityState.attributes.friendly_name || entityId}"
+                ></ha-icon>
+              `;
+            })
+          : html`<div>Nessuna entità configurata o attiva</div>`}
+      </div>
+
+
         </div>
         <div class="gradient-bar"></div>
         <div class="timeline">

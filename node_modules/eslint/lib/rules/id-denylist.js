@@ -69,14 +69,14 @@ function isRenamedImport(node) {
 }
 
 /**
- * Checks whether the given node is an ObjectPattern destructuring.
+ * Checks whether the given node is a renamed identifier node in an ObjectPattern destructuring.
  *
  * Examples:
- * const { a : b } = foo;
+ * const { a : b } = foo; // node `a` is renamed node.
  * @param {ASTNode} node `Identifier` node to check.
- * @returns {boolean} `true` if the node is in an ObjectPattern destructuring.
+ * @returns {boolean} `true` if the node is a renamed node in an ObjectPattern destructuring.
  */
-function isPropertyNameInDestructuring(node) {
+function isRenamedInDestructuring(node) {
     const parent = node.parent;
 
     return (
@@ -84,8 +84,24 @@ function isPropertyNameInDestructuring(node) {
             !parent.computed &&
             parent.type === "Property" &&
             parent.parent.type === "ObjectPattern" &&
+            parent.value !== node &&
             parent.key === node
         )
+    );
+}
+
+/**
+ * Checks whether the given node represents shorthand definition of a property in an object literal.
+ * @param {ASTNode} node `Identifier` node to check.
+ * @returns {boolean} `true` if the node is a shorthand property definition.
+ */
+function isShorthandPropertyDefinition(node) {
+    const parent = node.parent;
+
+    return (
+        parent.type === "Property" &&
+        parent.parent.type === "ObjectExpression" &&
+        parent.shorthand
     );
 }
 
@@ -93,15 +109,15 @@ function isPropertyNameInDestructuring(node) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow specified identifiers",
+            description: "disallow specified identifiers",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/id-denylist"
+            url: "https://eslint.org/docs/rules/id-denylist"
         },
 
         schema: {
@@ -112,8 +128,7 @@ module.exports = {
             uniqueItems: true
         },
         messages: {
-            restricted: "Identifier '{{name}}' is restricted.",
-            restrictedPrivate: "Identifier '#{{name}}' is restricted."
+            restricted: "Identifier '{{name}}' is restricted."
         }
     },
 
@@ -121,7 +136,6 @@ module.exports = {
 
         const denyList = new Set(context.options);
         const reportedNodes = new Set();
-        const sourceCode = context.sourceCode;
 
         let globalScope;
 
@@ -173,8 +187,11 @@ module.exports = {
                 parent.type !== "CallExpression" &&
                 parent.type !== "NewExpression" &&
                 !isRenamedImport(node) &&
-                !isPropertyNameInDestructuring(node) &&
-                !isReferenceToGlobalVariable(node)
+                !isRenamedInDestructuring(node) &&
+                !(
+                    isReferenceToGlobalVariable(node) &&
+                    !isShorthandPropertyDefinition(node)
+                )
             );
         }
 
@@ -185,40 +202,25 @@ module.exports = {
          * @private
          */
         function report(node) {
-
-            /*
-             * We used the range instead of the node because it's possible
-             * for the same identifier to be represented by two different
-             * nodes, with the most clear example being shorthand properties:
-             * { foo }
-             * In this case, "foo" is represented by one node for the name
-             * and one for the value. The only way to know they are the same
-             * is to look at the range.
-             */
-            if (!reportedNodes.has(node.range.toString())) {
-                const isPrivate = node.type === "PrivateIdentifier";
-
+            if (!reportedNodes.has(node)) {
                 context.report({
                     node,
-                    messageId: isPrivate ? "restrictedPrivate" : "restricted",
+                    messageId: "restricted",
                     data: {
                         name: node.name
                     }
                 });
-                reportedNodes.add(node.range.toString());
+                reportedNodes.add(node);
             }
         }
 
         return {
 
-            Program(node) {
-                globalScope = sourceCode.getScope(node);
+            Program() {
+                globalScope = context.getScope();
             },
 
-            [[
-                "Identifier",
-                "PrivateIdentifier"
-            ]](node) {
+            Identifier(node) {
                 if (isRestricted(node.name) && shouldCheck(node)) {
                     report(node);
                 }

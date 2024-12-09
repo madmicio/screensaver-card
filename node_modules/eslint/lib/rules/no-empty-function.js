@@ -89,15 +89,15 @@ function getKind(node) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow empty functions",
+            description: "disallow empty functions",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-empty-function"
+            url: "https://eslint.org/docs/rules/no-empty-function"
         },
 
         schema: [
@@ -123,7 +123,7 @@ module.exports = {
         const options = context.options[0] || {};
         const allowed = options.allow || [];
 
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Reports a given function node if the node matches the following patterns.
@@ -144,7 +144,7 @@ module.exports = {
                 filter: astUtils.isCommentToken
             });
 
-            if (!allowed.includes(kind) &&
+            if (allowed.indexOf(kind) === -1 &&
                 node.body.type === "BlockStatement" &&
                 node.body.body.length === 0 &&
                 innerComments.length === 0

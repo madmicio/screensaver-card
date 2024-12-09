@@ -15,15 +15,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow renaming import, export, and destructured assignments to the same name",
+            description: "disallow renaming import, export, and destructured assignments to the same name",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-useless-rename"
+            url: "https://eslint.org/docs/rules/no-useless-rename"
         },
 
         fixable: "code",
@@ -46,7 +46,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode,
+        const sourceCode = context.getSourceCode(),
             options = context.options[0] || {},
             ignoreDestructuring = options.ignoreDestructuring === true,
             ignoreImport = options.ignoreImport === true,
@@ -132,10 +132,8 @@ module.exports = {
                 return;
             }
 
-            if (
-                node.imported.range[0] !== node.local.range[0] &&
-                astUtils.getModuleExportName(node.imported) === node.local.name
-            ) {
+            if (node.imported.name === node.local.name &&
+                    node.imported.range[0] !== node.local.range[0]) {
                 reportError(node, node.imported, "Import");
             }
         }
@@ -150,10 +148,8 @@ module.exports = {
                 return;
             }
 
-            if (
-                node.local.range[0] !== node.exported.range[0] &&
-                astUtils.getModuleExportName(node.local) === astUtils.getModuleExportName(node.exported)
-            ) {
+            if (node.local.name === node.exported.name &&
+                    node.local.range[0] !== node.exported.range[0]) {
                 reportError(node, node.local, "Export");
             }
 

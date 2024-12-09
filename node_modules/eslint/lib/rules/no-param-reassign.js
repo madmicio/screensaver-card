@@ -10,15 +10,15 @@
 
 const stopNodePattern = /(?:Statement|Declaration|Function(?:Expression)?|Program)$/u;
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow reassigning `function` parameters",
+            description: "disallow reassigning `function` parameters",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-param-reassign"
+            url: "https://eslint.org/docs/rules/no-param-reassign"
         },
 
         schema: [
@@ -70,7 +70,6 @@ module.exports = {
         const props = context.options[0] && context.options[0].props;
         const ignoredPropertyAssignmentsFor = context.options[0] && context.options[0].ignorePropertyModificationsFor || [];
         const ignoredPropertyAssignmentsForRegex = context.options[0] && context.options[0].ignorePropertyModificationsForRegex || [];
-        const sourceCode = context.sourceCode;
 
         /**
          * Checks whether or not the reference modifies properties of its variable.
@@ -215,7 +214,7 @@ module.exports = {
          * @returns {void}
          */
         function checkForFunction(node) {
-            sourceCode.getDeclaredVariables(node).forEach(checkVariable);
+            context.getDeclaredVariables(node).forEach(checkVariable);
         }
 
         return {

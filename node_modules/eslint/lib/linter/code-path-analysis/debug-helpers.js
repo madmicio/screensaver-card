@@ -20,8 +20,8 @@ const debug = require("debug")("eslint:code-path");
  * @param {CodePathSegment} segment A segment to get.
  * @returns {string} Id of the segment.
  */
-/* c8 ignore next */
-function getId(segment) { // eslint-disable-line jsdoc/require-jsdoc -- Ignoring
+/* istanbul ignore next */
+function getId(segment) { // eslint-disable-line jsdoc/require-jsdoc
     return segment.id + (segment.reachable ? "" : "!");
 }
 
@@ -67,7 +67,7 @@ module.exports = {
      * @param {boolean} leaving A flag whether or not it's leaving
      * @returns {void}
      */
-    dumpState: !debug.enabled ? debug : /* c8 ignore next */ function(node, state, leaving) {
+    dumpState: !debug.enabled ? debug : /* istanbul ignore next */ function(node, state, leaving) {
         for (let i = 0; i < state.currentSegments.length; ++i) {
             const segInternal = state.currentSegments[i].internal;
 
@@ -98,7 +98,7 @@ module.exports = {
      * @see http://www.graphviz.org
      * @see http://www.webgraphviz.com
      */
-    dumpDot: !debug.enabled ? debug : /* c8 ignore next */ function(codePath) {
+    dumpDot: !debug.enabled ? debug : /* istanbul ignore next */ function(codePath) {
         let text =
             "\n" +
             "digraph {\n" +
@@ -109,13 +109,13 @@ module.exports = {
             text += "final[label=\"\",shape=doublecircle,style=filled,fillcolor=black,width=0.25,height=0.25];\n";
         }
         if (codePath.thrownSegments.length > 0) {
-            text += "thrown[label=\"✘\",shape=circle,width=0.3,height=0.3,fixedsize=true];\n";
+            text += "thrown[label=\"✘\",shape=circle,width=0.3,height=0.3,fixedsize];\n";
         }
 
         const traceMap = Object.create(null);
         const arrows = this.makeDotArrows(codePath, traceMap);
 
-        for (const id in traceMap) { // eslint-disable-line guard-for-in -- Want ability to traverse prototype
+        for (const id in traceMap) { // eslint-disable-line guard-for-in
             const segment = traceMap[id];
 
             text += `${id}[`;

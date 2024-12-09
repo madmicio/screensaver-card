@@ -8,15 +8,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Enforce consistent naming when capturing the current execution context",
+            description: "enforce consistent naming when capturing the current execution context",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/consistent-this"
+            url: "https://eslint.org/docs/rules/consistent-this"
         },
 
         schema: {
@@ -36,7 +36,6 @@ module.exports = {
 
     create(context) {
         let aliases = [];
-        const sourceCode = context.sourceCode;
 
         if (context.options.length === 0) {
             aliases.push("that");
@@ -48,7 +47,7 @@ module.exports = {
          * Reports that a variable declarator or assignment expression is assigning
          * a non-'this' value to the specified alias.
          * @param {ASTNode} node The assigning node.
-         * @param {string} name the name of the alias that was incorrectly used.
+         * @param {string}  name the name of the alias that was incorrectly used.
          * @returns {void}
          */
         function reportBadAssignment(node, name) {
@@ -66,7 +65,7 @@ module.exports = {
         function checkAssignment(node, name, value) {
             const isThis = value.type === "ThisExpression";
 
-            if (aliases.includes(name)) {
+            if (aliases.indexOf(name) !== -1) {
                 if (!isThis || node.operator && node.operator !== "=") {
                     reportBadAssignment(node, name);
                 }
@@ -116,11 +115,10 @@ module.exports = {
 
         /**
          * Check each alias to ensure that is was assigned to the correct value.
-         * @param {ASTNode} node The node that represents the scope to check.
          * @returns {void}
          */
-        function ensureWasAssigned(node) {
-            const scope = sourceCode.getScope(node);
+        function ensureWasAssigned() {
+            const scope = context.getScope();
 
             aliases.forEach(alias => {
                 checkWasAssigned(alias, scope);

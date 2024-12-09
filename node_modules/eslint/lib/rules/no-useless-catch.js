@@ -9,15 +9,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow unnecessary `catch` clauses",
+            description: "disallow unnecessary `catch` clauses",
+            category: "Best Practices",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-useless-catch"
+            url: "https://eslint.org/docs/rules/no-useless-catch"
         },
 
         schema: [],

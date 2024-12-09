@@ -8,15 +8,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "problem",
 
         docs: {
-            description: "Disallow sparse arrays",
+            description: "disallow sparse arrays",
+            category: "Possible Errors",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-sparse-arrays"
+            url: "https://eslint.org/docs/rules/no-sparse-arrays"
         },
 
         schema: [],
@@ -37,7 +37,7 @@ module.exports = {
 
             ArrayExpression(node) {
 
-                const emptySpot = node.elements.includes(null);
+                const emptySpot = node.elements.indexOf(null) > -1;
 
                 if (emptySpot) {
                     context.report({ node, messageId: "unexpectedSparseArray" });

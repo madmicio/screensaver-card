@@ -46,15 +46,15 @@ const splitByAnd = splitByLogicalOperator.bind(null, "&&");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "problem",
 
         docs: {
-            description: "Disallow duplicate conditions in if-else-if chains",
+            description: "disallow duplicate conditions in if-else-if chains",
+            category: "Possible Errors",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-dupe-else-if"
+            url: "https://eslint.org/docs/rules/no-dupe-else-if"
         },
 
         schema: [],
@@ -65,7 +65,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Determines whether the two given nodes are considered to be equal. In particular, given that the nodes

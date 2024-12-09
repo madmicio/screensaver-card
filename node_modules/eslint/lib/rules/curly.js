@@ -14,15 +14,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Enforce consistent brace style for all control statements",
+            description: "enforce consistent brace style for all control statements",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/curly"
+            url: "https://eslint.org/docs/rules/curly"
         },
 
         schema: {
@@ -70,7 +70,7 @@ module.exports = {
         const multiOrNest = (context.options[0] === "multi-or-nest");
         const consistent = (context.options[1] === "consistent");
 
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Helpers

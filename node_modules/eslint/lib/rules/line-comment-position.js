@@ -10,15 +10,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "layout",
 
         docs: {
-            description: "Enforce position of line comments",
+            description: "enforce position of line comments",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/line-comment-position"
+            url: "https://eslint.org/docs/rules/line-comment-position"
         },
 
         schema: [
@@ -78,7 +78,7 @@ module.exports = {
         const defaultIgnoreRegExp = astUtils.COMMENTS_IGNORE_PATTERN;
         const fallThroughRegExp = /^\s*falls?\s?through/u;
         const customIgnoreRegExp = new RegExp(ignorePattern, "u");
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Public

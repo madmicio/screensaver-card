@@ -49,15 +49,15 @@ function isValidThisArg(expectedThis, thisArg, sourceCode) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow unnecessary calls to `.call()` and `.apply()`",
+            description: "disallow unnecessary calls to `.call()` and `.apply()`",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-useless-call"
+            url: "https://eslint.org/docs/rules/no-useless-call"
         },
 
         schema: [],
@@ -68,7 +68,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         return {
             CallExpression(node) {

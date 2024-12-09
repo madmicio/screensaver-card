@@ -11,15 +11,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "problem",
 
         docs: {
-            description: "Disallow reassigning class members",
+            description: "disallow reassigning class members",
+            category: "ECMAScript 6",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-class-assign"
+            url: "https://eslint.org/docs/rules/no-class-assign"
         },
 
         schema: [],
@@ -30,8 +30,6 @@ module.exports = {
     },
 
     create(context) {
-
-        const sourceCode = context.sourceCode;
 
         /**
          * Finds and reports references that are non initializer and writable.
@@ -51,7 +49,7 @@ module.exports = {
          * @returns {void}
          */
         function checkForClass(node) {
-            sourceCode.getDeclaredVariables(node).forEach(checkVariable);
+            context.getDeclaredVariables(node).forEach(checkVariable);
         }
 
         return {

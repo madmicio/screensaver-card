@@ -24,18 +24,17 @@ function getUnicodeEscape(character) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow `\\8` and `\\9` escape sequences in string literals",
-            recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-nonoctal-decimal-escape"
+            description: "disallow `\\8` and `\\9` escape sequences in string literals",
+            category: "Best Practices",
+            recommended: false,
+            url: "https://eslint.org/docs/rules/no-nonoctal-decimal-escape",
+            suggestion: true
         },
-
-        hasSuggestions: true,
 
         schema: [],
 
@@ -49,7 +48,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Creates a new Suggestion object.

@@ -9,15 +9,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow `with` statements",
+            description: "disallow `with` statements",
+            category: "Best Practices",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-with"
+            url: "https://eslint.org/docs/rules/no-with"
         },
 
         schema: [],

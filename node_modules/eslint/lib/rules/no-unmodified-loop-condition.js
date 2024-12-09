@@ -156,15 +156,15 @@ function updateModifiedFlag(conditions, modifiers) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "problem",
 
         docs: {
-            description: "Disallow unmodified loop conditions",
+            description: "disallow unmodified loop conditions",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-unmodified-loop-condition"
+            url: "https://eslint.org/docs/rules/no-unmodified-loop-condition"
         },
 
         schema: [],
@@ -175,7 +175,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
         let groupMap = null;
 
         /**
@@ -340,8 +340,8 @@ module.exports = {
         }
 
         return {
-            "Program:exit"(node) {
-                const queue = [sourceCode.getScope(node)];
+            "Program:exit"() {
+                const queue = [context.getScope()];
 
                 groupMap = new Map();
 

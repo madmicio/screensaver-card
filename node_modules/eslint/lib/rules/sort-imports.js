@@ -9,15 +9,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Enforce sorted import declarations within modules",
+            description: "enforce sorted import declarations within modules",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/sort-imports"
+            url: "https://eslint.org/docs/rules/sort-imports"
         },
 
         schema: [
@@ -71,7 +71,7 @@ module.exports = {
             ignoreMemberSort = configuration.ignoreMemberSort || false,
             memberSyntaxSortOrder = configuration.memberSyntaxSortOrder || ["none", "all", "multiple", "single"],
             allowSeparatedGroups = configuration.allowSeparatedGroups || false,
-            sourceCode = context.sourceCode;
+            sourceCode = context.getSourceCode();
         let previousDeclaration = null;
 
         /**

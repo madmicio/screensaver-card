@@ -6,30 +6,18 @@
 "use strict";
 
 //------------------------------------------------------------------------------
-// Requirements
-//------------------------------------------------------------------------------
-
-const astUtils = require("./utils/ast-utils");
-
-//------------------------------------------------------------------------------
-// Helpers
-//------------------------------------------------------------------------------
-
-const callMethods = new Set(["apply", "bind", "call"]);
-
-//------------------------------------------------------------------------------
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow `new` operators with the `Function` object",
+            description: "disallow `new` operators with the `Function` object",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-new-func"
+            url: "https://eslint.org/docs/rules/no-new-func"
         },
 
         schema: [],
@@ -40,41 +28,24 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
 
         return {
-            "Program:exit"(node) {
-                const globalScope = sourceCode.getScope(node);
+            "Program:exit"() {
+                const globalScope = context.getScope();
                 const variable = globalScope.set.get("Function");
 
                 if (variable && variable.defs.length === 0) {
                     variable.references.forEach(ref => {
-                        const idNode = ref.identifier;
-                        const { parent } = idNode;
-                        let evalNode;
+                        const node = ref.identifier;
+                        const { parent } = node;
 
-                        if (parent) {
-                            if (idNode === parent.callee && (
-                                parent.type === "NewExpression" ||
-                                parent.type === "CallExpression"
-                            )) {
-                                evalNode = parent;
-                            } else if (
-                                parent.type === "MemberExpression" &&
-                                idNode === parent.object &&
-                                callMethods.has(astUtils.getStaticPropertyName(parent))
-                            ) {
-                                const maybeCallee = parent.parent.type === "ChainExpression" ? parent.parent : parent;
-
-                                if (maybeCallee.parent.type === "CallExpression" && maybeCallee.parent.callee === maybeCallee) {
-                                    evalNode = maybeCallee.parent;
-                                }
-                            }
-                        }
-
-                        if (evalNode) {
+                        if (
+                            parent &&
+                            (parent.type === "NewExpression" || parent.type === "CallExpression") &&
+                            node === parent.callee
+                        ) {
                             context.report({
-                                node: evalNode,
+                                node: parent,
                                 messageId: "noFunctionConstructor"
                             });
                         }

@@ -1,10 +1,13 @@
-# `@typescript-eslint/visitor-keys`
+<h1 align="center">TypeScript-ESTree Visitor Keys</h1>
 
-> Visitor keys used to help traverse the TypeScript-ESTree AST.
+<p align="center">Visitor keys used to help traverse the TypeScript-ESTree AST</p>
 
-## ✋ Internal Package
+<p align="center">
+    <img src="https://github.com/typescript-eslint/typescript-eslint/workflows/CI/badge.svg" alt="CI" />
+    <a href="https://www.npmjs.com/package/@typescript-eslint/visitor-keys"><img src="https://img.shields.io/npm/v/@typescript-eslint/visitor-keys.svg?style=flat-square" alt="NPM Version" /></a>
+    <a href="https://www.npmjs.com/package/@typescript-eslint/visitor-keys"><img src="https://img.shields.io/npm/dm/@typescript-eslint/visitor-keys.svg?style=flat-square" alt="NPM Downloads" /></a>
+</p>
 
-This is an _internal package_ to the [typescript-eslint monorepo](https://github.com/typescript-eslint/typescript-eslint).
-You likely don't want to use it directly.
+## Contributing
 
-👉 See **https://typescript-eslint.io** for docs on typescript-eslint.
+[See the contributing guide here](../../CONTRIBUTING.md)

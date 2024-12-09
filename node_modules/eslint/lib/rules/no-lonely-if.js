@@ -8,15 +8,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow `if` statements as the only statement in `else` blocks",
+            description: "disallow `if` statements as the only statement in `else` blocks",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-lonely-if"
+            url: "https://eslint.org/docs/rules/no-lonely-if"
         },
 
         schema: [],
@@ -28,12 +28,13 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         return {
             IfStatement(node) {
-                const parent = node.parent,
-                    grandparent = parent.parent;
+                const ancestors = context.getAncestors(),
+                    parent = ancestors.pop(),
+                    grandparent = ancestors.pop();
 
                 if (parent && parent.type === "BlockStatement" &&
                         parent.body.length === 1 && grandparent &&

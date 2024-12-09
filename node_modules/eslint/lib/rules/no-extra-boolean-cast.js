@@ -10,7 +10,7 @@
 //------------------------------------------------------------------------------
 
 const astUtils = require("./utils/ast-utils");
-const eslintUtils = require("@eslint-community/eslint-utils");
+const eslintUtils = require("eslint-utils");
 
 const precedence = astUtils.getPrecedence;
 
@@ -18,15 +18,15 @@ const precedence = astUtils.getPrecedence;
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow unnecessary boolean casts",
+            description: "disallow unnecessary boolean casts",
+            category: "Possible Errors",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-extra-boolean-cast"
+            url: "https://eslint.org/docs/rules/no-extra-boolean-cast"
         },
 
         schema: [{
@@ -48,16 +48,16 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         // Node types which have a test which will coerce values to booleans.
-        const BOOLEAN_NODE_TYPES = new Set([
+        const BOOLEAN_NODE_TYPES = [
             "IfStatement",
             "DoWhileStatement",
             "WhileStatement",
             "ConditionalExpression",
             "ForStatement"
-        ]);
+        ];
 
         /**
          * Check if a node is a Boolean function or constructor.
@@ -95,7 +95,7 @@ module.exports = {
                 (isBooleanFunctionOrConstructorCall(node.parent) &&
                 node === node.parent.arguments[0]) ||
 
-                (BOOLEAN_NODE_TYPES.has(node.parent.type) &&
+                (BOOLEAN_NODE_TYPES.indexOf(node.parent.type) !== -1 &&
                     node === node.parent.test) ||
 
                 // !<bool>
@@ -150,7 +150,6 @@ module.exports = {
          * For example, if the parent is `ConditionalExpression`, `previousNode` must be its `test` child.
          * @param {ASTNode} previousNode Previous node.
          * @param {ASTNode} node The node to check.
-         * @throws {Error} (Unreachable.)
          * @returns {boolean} `true` if the node needs to be parenthesized.
          */
         function needsParens(previousNode, node) {
@@ -188,7 +187,7 @@ module.exports = {
                     }
                     return precedence(node) <= precedence(parent);
 
-                /* c8 ignore next */
+                /* istanbul ignore next */
                 default:
                     throw new Error(`Unexpected parent type: ${parent.type}`);
             }

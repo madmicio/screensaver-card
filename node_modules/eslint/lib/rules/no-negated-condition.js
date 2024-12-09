@@ -8,15 +8,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow negated conditions",
+            description: "disallow negated conditions",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-negated-condition"
+            url: "https://eslint.org/docs/rules/no-negated-condition"
         },
 
         schema: [],

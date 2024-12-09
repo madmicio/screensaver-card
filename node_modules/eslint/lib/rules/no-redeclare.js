@@ -15,15 +15,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow variable redeclaration",
+            description: "disallow variable redeclaration",
+            category: "Best Practices",
             recommended: true,
-            url: "https://eslint.org/docs/latest/rules/no-redeclare"
+            url: "https://eslint.org/docs/rules/no-redeclare"
         },
 
         messages: {
@@ -50,7 +50,7 @@ module.exports = {
                 context.options[0].builtinGlobals
             )
         };
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Iterate declarations of a given variable.
@@ -129,7 +129,7 @@ module.exports = {
          * @private
          */
         function checkForBlock(node) {
-            const scope = sourceCode.getScope(node);
+            const scope = context.getScope();
 
             /*
              * In ES5, some node type such as `BlockStatement` doesn't have that scope.
@@ -141,8 +141,8 @@ module.exports = {
         }
 
         return {
-            Program(node) {
-                const scope = sourceCode.getScope(node);
+            Program() {
+                const scope = context.getScope();
 
                 findVariablesInScope(scope);
 
@@ -161,8 +161,6 @@ module.exports = {
             FunctionDeclaration: checkForBlock,
             FunctionExpression: checkForBlock,
             ArrowFunctionExpression: checkForBlock,
-
-            StaticBlock: checkForBlock,
 
             BlockStatement: checkForBlock,
             ForStatement: checkForBlock,

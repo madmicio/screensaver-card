@@ -5,9 +5,9 @@
 
 "use strict";
 
-/* eslint no-console: "off" -- Logging util */
+/* eslint no-console: "off" */
 
-/* c8 ignore next */
+/* istanbul ignore next */
 module.exports = {
 
     /**

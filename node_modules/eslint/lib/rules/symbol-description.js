@@ -16,15 +16,15 @@ const astUtils = require("./utils/ast-utils");
 //------------------------------------------------------------------------------
 
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Require symbol descriptions",
+            description: "require symbol descriptions",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/symbol-description"
+            url: "https://eslint.org/docs/rules/symbol-description"
         },
         fixable: null,
         schema: [],
@@ -34,8 +34,6 @@ module.exports = {
     },
 
     create(context) {
-
-        const sourceCode = context.sourceCode;
 
         /**
          * Reports if node does not conform the rule in case rule is set to
@@ -53,16 +51,16 @@ module.exports = {
         }
 
         return {
-            "Program:exit"(node) {
-                const scope = sourceCode.getScope(node);
+            "Program:exit"() {
+                const scope = context.getScope();
                 const variable = astUtils.getVariableByName(scope, "Symbol");
 
                 if (variable && variable.defs.length === 0) {
                     variable.references.forEach(reference => {
-                        const idNode = reference.identifier;
+                        const node = reference.identifier;
 
-                        if (astUtils.isCallee(idNode)) {
-                            checkArgument(idNode.parent);
+                        if (astUtils.isCallee(node)) {
+                            checkArgument(node.parent);
                         }
                     });
                 }

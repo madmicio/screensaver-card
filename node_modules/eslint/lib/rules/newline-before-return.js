@@ -1,7 +1,7 @@
 /**
  * @fileoverview Rule to require newlines before `return` statement
  * @author Kai Cataldo
- * @deprecated in ESLint v4.0.0
+ * @deprecated
  */
 "use strict";
 
@@ -9,15 +9,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "layout",
 
         docs: {
-            description: "Require an empty line before `return` statements",
+            description: "require an empty line before `return` statements",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/newline-before-return"
+            url: "https://eslint.org/docs/rules/newline-before-return"
         },
 
         fixable: "whitespace",
@@ -31,7 +31,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         //--------------------------------------------------------------------------
         // Helpers
@@ -47,7 +47,7 @@ module.exports = {
         function isPrecededByTokens(node, testTokens) {
             const tokenBefore = sourceCode.getTokenBefore(node);
 
-            return testTokens.includes(tokenBefore.value);
+            return testTokens.some(token => tokenBefore.value === token);
         }
 
         /**

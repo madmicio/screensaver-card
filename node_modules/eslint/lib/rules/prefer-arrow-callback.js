@@ -53,14 +53,13 @@ function getVariableOfArguments(scope) {
         }
     }
 
-    /* c8 ignore next */
+    /* istanbul ignore next */
     return null;
 }
 
 /**
  * Checks whether or not a given node is a callback.
  * @param {ASTNode} node A node to check.
- * @throws {Error} (Unreachable.)
  * @returns {Object}
  *   {boolean} retv.isCallback - `true` if the node is a callback.
  *   {boolean} retv.isLexicalThis - `true` if the node is with `.bind(this)`.
@@ -126,7 +125,7 @@ function getCallbackInfo(node) {
         parent = parent.parent;
     }
 
-    /* c8 ignore next */
+    /* istanbul ignore next */
     throw new Error("unreachable");
 }
 
@@ -145,15 +144,15 @@ function hasDuplicateParams(paramsList) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Require using arrow functions for callbacks",
+            description: "require using arrow functions for callbacks",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/prefer-arrow-callback"
+            url: "https://eslint.org/docs/rules/prefer-arrow-callback"
         },
 
         schema: [
@@ -185,7 +184,7 @@ module.exports = {
 
         const allowUnboundThis = options.allowUnboundThis !== false; // default to true
         const allowNamedFunctions = options.allowNamedFunctions;
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /*
          * {Array<{this: boolean, super: boolean, meta: boolean}>}
@@ -263,14 +262,14 @@ module.exports = {
                 }
 
                 // Skip recursive functions.
-                const nameVar = sourceCode.getDeclaredVariables(node)[0];
+                const nameVar = context.getDeclaredVariables(node)[0];
 
                 if (isFunctionName(nameVar) && nameVar.references.length > 0) {
                     return;
                 }
 
                 // Skip if it's using arguments.
-                const variable = getVariableOfArguments(sourceCode.getScope(node));
+                const variable = getVariableOfArguments(context.getScope());
 
                 if (variable && variable.references.length > 0) {
                     return;
@@ -335,7 +334,6 @@ module.exports = {
                             // Convert the function expression to an arrow function.
                             const functionToken = sourceCode.getFirstToken(node, node.async ? 1 : 0);
                             const leftParenToken = sourceCode.getTokenAfter(functionToken, astUtils.isOpeningParenToken);
-                            const tokenBeforeBody = sourceCode.getTokenBefore(node.body);
 
                             if (sourceCode.commentsExistBetween(functionToken, leftParenToken)) {
 
@@ -349,7 +347,7 @@ module.exports = {
                                 // Remove extra tokens and spaces.
                                 yield fixer.removeRange([functionToken.range[0], leftParenToken.range[0]]);
                             }
-                            yield fixer.insertTextAfter(tokenBeforeBody, " =>");
+                            yield fixer.insertTextBefore(node.body, "=> ");
 
                             // Get the node that will become the new arrow function.
                             let replacedNode = callbackInfo.isLexicalThis ? node.parent.parent : node;

@@ -16,15 +16,15 @@ const globals = require("globals");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow extending native types",
+            description: "disallow extending native types",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-extend-native"
+            url: "https://eslint.org/docs/rules/no-extend-native"
         },
 
         schema: [
@@ -51,7 +51,6 @@ module.exports = {
     create(context) {
 
         const config = context.options[0] || {};
-        const sourceCode = context.sourceCode;
         const exceptions = new Set(config.exceptions || []);
         const modifiedBuiltins = new Set(
             Object.keys(globals.builtin)
@@ -160,8 +159,8 @@ module.exports = {
 
         return {
 
-            "Program:exit"(node) {
-                const globalScope = sourceCode.getScope(node);
+            "Program:exit"() {
+                const globalScope = context.getScope();
 
                 modifiedBuiltins.forEach(builtin => {
                     const builtinVar = globalScope.set.get(builtin);

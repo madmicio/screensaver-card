@@ -10,15 +10,15 @@
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "layout",
 
         docs: {
-            description: "Disallow spacing between function identifiers and their applications (deprecated)",
+            description: "disallow spacing between function identifiers and their applications (deprecated)",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-spaced-func"
+            url: "https://eslint.org/docs/rules/no-spaced-func"
         },
 
         deprecated: true,
@@ -35,7 +35,7 @@ module.exports = {
 
     create(context) {
 
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Check if open space is present in a function name

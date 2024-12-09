@@ -10,15 +10,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow inline comments after code",
+            description: "disallow inline comments after code",
+            category: "Stylistic Issues",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-inline-comments"
+            url: "https://eslint.org/docs/rules/no-inline-comments"
         },
 
         schema: [
@@ -39,7 +39,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
         const options = context.options[0];
         let customIgnoreRegExp;
 

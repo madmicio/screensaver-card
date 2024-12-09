@@ -90,7 +90,7 @@ function getScopeNode(node) {
         }
     }
 
-    /* c8 ignore next */
+    /* istanbul ignore next : unreachable */
     return null;
 }
 
@@ -159,7 +159,7 @@ function hasReferenceInTDZ(node) {
             return !reference.init && (
                 start < idStart ||
                 (defaultValue !== null && start >= defaultStart && end <= defaultEnd) ||
-                (!astUtils.isFunction(node) && start >= initStart && end <= initEnd)
+                (start >= initStart && end <= initEnd)
             );
         });
     };
@@ -179,15 +179,15 @@ function hasNameDisallowedForLetDeclarations(variable) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Require `let` or `const` instead of `var`",
+            description: "require `let` or `const` instead of `var`",
+            category: "ECMAScript 6",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-var"
+            url: "https://eslint.org/docs/rules/no-var"
         },
 
         schema: [],
@@ -199,7 +199,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Checks whether the variables which are defined by the given declarator node have their references in TDZ.
@@ -210,7 +210,7 @@ module.exports = {
             if (!declarator.init) {
                 return false;
             }
-            const variables = sourceCode.getDeclaredVariables(declarator);
+            const variables = context.getDeclaredVariables(declarator);
 
             return variables.some(hasReferenceInTDZ(declarator.init));
         }
@@ -268,7 +268,7 @@ module.exports = {
          * @returns {boolean} `true` if it can fix the node.
          */
         function canFix(node) {
-            const variables = sourceCode.getDeclaredVariables(node);
+            const variables = context.getDeclaredVariables(node);
             const scopeNode = getScopeNode(node);
 
             if (node.parent.type === "SwitchCase" ||

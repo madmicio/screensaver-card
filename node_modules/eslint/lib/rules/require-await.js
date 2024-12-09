@@ -28,15 +28,15 @@ function capitalizeFirstLetter(text) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow async functions which have no `await` expression",
+            description: "disallow async functions which have no `await` expression",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/require-await"
+            url: "https://eslint.org/docs/rules/require-await"
         },
 
         schema: [],
@@ -47,7 +47,7 @@ module.exports = {
     },
 
     create(context) {
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
         let scopeInfo = null;
 
         /**

@@ -30,9 +30,9 @@ function parseOptions(options) {
 }
 
 /**
- * Checks whether or not a node is a double logical negating.
+ * Checks whether or not a node is a double logical nigating.
  * @param {ASTNode} node An UnaryExpression node to check.
- * @returns {boolean} Whether or not the node is a double logical negating.
+ * @returns {boolean} Whether or not the node is a double logical nigating.
  */
 function isDoubleLogicalNegating(node) {
     return (
@@ -69,24 +69,6 @@ function isMultiplyByOne(node) {
         node.left.type === "Literal" && node.left.value === 1 ||
         node.right.type === "Literal" && node.right.value === 1
     );
-}
-
-/**
- * Checks whether the given node logically represents multiplication by a fraction of `1`.
- * For example, `a * 1` in `a * 1 / b` is technically multiplication by `1`, but the
- * whole expression can be logically interpreted as `a * (1 / b)` rather than `(a * 1) / b`.
- * @param {BinaryExpression} node A BinaryExpression node to check.
- * @param {SourceCode} sourceCode The source code object.
- * @returns {boolean} Whether or not the node is a multiplying by a fraction of `1`.
- */
-function isMultiplyByFractionOfOne(node, sourceCode) {
-    return node.type === "BinaryExpression" &&
-        node.operator === "*" &&
-        (node.right.type === "Literal" && node.right.value === 1) &&
-        node.parent.type === "BinaryExpression" &&
-        node.parent.operator === "/" &&
-        node.parent.left === node &&
-        !astUtils.isParenthesised(sourceCode, node);
 }
 
 /**
@@ -185,15 +167,15 @@ function getNonEmptyOperand(node) {
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow shorthand type conversions",
+            description: "disallow shorthand type conversions",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-implicit-coercion"
+            url: "https://eslint.org/docs/rules/no-implicit-coercion"
         },
 
         fixable: "code",
@@ -235,7 +217,7 @@ module.exports = {
 
     create(context) {
         const options = parseOptions(context.options[0] || {});
-        const sourceCode = context.sourceCode;
+        const sourceCode = context.getSourceCode();
 
         /**
          * Reports an error and autofixes the node
@@ -275,7 +257,7 @@ module.exports = {
                 let operatorAllowed;
 
                 // !!foo
-                operatorAllowed = options.allow.includes("!!");
+                operatorAllowed = options.allow.indexOf("!!") >= 0;
                 if (!operatorAllowed && options.boolean && isDoubleLogicalNegating(node)) {
                     const recommendation = `Boolean(${sourceCode.getText(node.argument.argument)})`;
 
@@ -283,7 +265,7 @@ module.exports = {
                 }
 
                 // ~foo.indexOf(bar)
-                operatorAllowed = options.allow.includes("~");
+                operatorAllowed = options.allow.indexOf("~") >= 0;
                 if (!operatorAllowed && options.boolean && isBinaryNegatingOfIndexOf(node)) {
 
                     // `foo?.indexOf(bar) !== -1` will be true (== found) if the `foo` is nullish. So use `>= 0` in that case.
@@ -294,7 +276,7 @@ module.exports = {
                 }
 
                 // +foo
-                operatorAllowed = options.allow.includes("+");
+                operatorAllowed = options.allow.indexOf("+") >= 0;
                 if (!operatorAllowed && options.number && node.operator === "+" && !isNumeric(node.argument)) {
                     const recommendation = `Number(${sourceCode.getText(node.argument)})`;
 
@@ -307,9 +289,8 @@ module.exports = {
                 let operatorAllowed;
 
                 // 1 * foo
-                operatorAllowed = options.allow.includes("*");
-                const nonNumericOperand = !operatorAllowed && options.number && isMultiplyByOne(node) && !isMultiplyByFractionOfOne(node, sourceCode) &&
-                    getNonNumericOperand(node);
+                operatorAllowed = options.allow.indexOf("*") >= 0;
+                const nonNumericOperand = !operatorAllowed && options.number && isMultiplyByOne(node) && getNonNumericOperand(node);
 
                 if (nonNumericOperand) {
                     const recommendation = `Number(${sourceCode.getText(nonNumericOperand)})`;
@@ -318,7 +299,7 @@ module.exports = {
                 }
 
                 // "" + foo
-                operatorAllowed = options.allow.includes("+");
+                operatorAllowed = options.allow.indexOf("+") >= 0;
                 if (!operatorAllowed && options.string && isConcatWithEmptyString(node)) {
                     const recommendation = `String(${sourceCode.getText(getNonEmptyOperand(node))})`;
 
@@ -329,7 +310,7 @@ module.exports = {
             AssignmentExpression(node) {
 
                 // foo += ""
-                const operatorAllowed = options.allow.includes("+");
+                const operatorAllowed = options.allow.indexOf("+") >= 0;
 
                 if (!operatorAllowed && options.string && isAppendEmptyString(node)) {
                     const code = sourceCode.getText(getNonEmptyOperand(node));

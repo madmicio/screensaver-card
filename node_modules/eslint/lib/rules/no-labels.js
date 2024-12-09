@@ -14,15 +14,15 @@ const astUtils = require("./utils/ast-utils");
 // Rule Definition
 //------------------------------------------------------------------------------
 
-/** @type {import('../shared/types').Rule} */
 module.exports = {
     meta: {
         type: "suggestion",
 
         docs: {
-            description: "Disallow labeled statements",
+            description: "disallow labeled statements",
+            category: "Best Practices",
             recommended: false,
-            url: "https://eslint.org/docs/latest/rules/no-labels"
+            url: "https://eslint.org/docs/rules/no-labels"
         },
 
         schema: [
@@ -98,7 +98,7 @@ module.exports = {
                 info = info.upper;
             }
 
-            /* c8 ignore next */
+            /* istanbul ignore next: syntax error */
             return "other";
         }
 
