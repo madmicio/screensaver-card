@@ -16,8 +16,9 @@ export class ScreensaverCard extends LitElement {
     console.log(scriptDirectory);
     style.textContent = `
       @font-face {
-        font-family: 'displayFont';
-        src: url('${scriptDirectory}/BwModelica-HairlineExpanded.otf') format('truetype');
+        font-family: 'bw_font';
+        // src: url('${scriptDirectory}/BwModelica-HairlineExpanded.otf') format('truetype');
+        src: url('/local/BwModelica-HairlineExpanded.otf') format('truetype');
       }
 
      
@@ -133,7 +134,7 @@ export class ScreensaverCard extends LitElement {
         position: absolute;
         bottom: 14%;
         left: 5%;
-        font-family: displayFont, monospace; /* Usa un font monospaziato per numeri uniformi */
+        font-family: bw_font, monospace; /* Usa un font monospaziato per numeri uniformi */
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -148,7 +149,7 @@ export class ScreensaverCard extends LitElement {
           
           // width: 100%;
           text-align: center;
-          font-family: displayFont, monospace;
+          font-family: bw_font, monospace;
 
           
           line-height: 1;
@@ -194,7 +195,7 @@ export class ScreensaverCard extends LitElement {
         // background: var(--card-background-color);
         border-radius: 4px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        font-family: displayFont, monospace;
+        font-family: bw_font, monospace;
         margin-top: 1vh;
       }
 
@@ -255,7 +256,7 @@ export class ScreensaverCard extends LitElement {
         }
 
         .ext-temp {
-        font-family:'displayFont'; 
+        font-family:'bw_font'; 
         font-weight: bold;
         font-size: 4vh;
         color: #757575;
@@ -531,7 +532,7 @@ private filterDuplicateEvents(events: any[]): any[] {
       } else {
         nowWeatherIcon = weatherState; // Per tutti gli altri stati
       }
-console.log(this.cg_alert);
+console.log(nowWeatherIcon);
       
     return html`
       <ha-card id="dynamic-card" style="padding: 30px;">
@@ -558,7 +559,7 @@ console.log(this.cg_alert);
     viewBox="0 0 1152.78 354.73" style="enable-background:new 0 0 1152.78 354.73; height:6vh;" xml:space="preserve">
   <style type="text/css">
     .st0{fill:#757575;}
-    .st1{font-family:'displayFont'; font-weight: bold;}
+    .st1{font-family:'bw_font'; font-weight: bold;}
     .st2{font-size:180px;}
   </style>
   <g>
