@@ -9,53 +9,32 @@ jobs:
     name: Prepare release
     runs-on: ubuntu-latest
     steps:
-      # Check out the repository
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v1
       
-      # Set up Node.js
       - uses: actions/setup-node@v3
         with:
           node-version: 20
 
-      # Build the files
       - name: Build the file
         run: |
           npm install
           npm version --git-tag-version=false --commit-hooks=false "${{ github.event.release.tag_name }}"
           npm run build
 
-      # Upload the main build result
       - name: Upload build result to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/screensaver-card.js
           asset_name: screensaver-card.js
-          tag: ${{ github.event.release.tag_name }}
+          tag: ${{ github.ref }}
           overwrite: true
       
-      # Install GitHub CLI
-      - name: Install GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-
-      # Check GitHub CLI
-      - name: Check GitHub CLI
-        run: gh --version
-
-      # Debug the graphic directory
-      - name: List files in graphic directory
-        run: |
-          echo "Listing files in graphic directory:"
-          ls -R graphic || echo "Directory 'graphic' not found"
-
-      # Upload individual files from the "graphic" directory
-      - name: Upload individual files
-        run: |
-          for file in $(find graphic -type f); do
-            echo "Uploading $file"
-            gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload font
+        uses: svenstaro/upload-release-action@v1-release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: BwModelica-HairlineExpanded.otf
+          asset_name: BwModelica-HairlineExpanded.otf
+          tag: ${{ github.ref }}
+          overwrite: true
