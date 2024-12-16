@@ -33,3 +33,7 @@ jobs:
         with:
           name: screensaver-card-build
           path: dist/
+      - name: Archive graphic
+        uses: actions/upload-artifact@v3
+        with:
+          path: graphic/

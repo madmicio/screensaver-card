@@ -16,11 +16,10 @@
     "repository": "git@github.com:madmicio/screensaver-card.git",
     "scripts": {
         "start": "rollup -c rollup.config.js --watch",
-        "build": "npm run rollup && npm run add-version && npm run postbuild",
+        "build": "npm run rollup && npm run add-version",
         "add-version": "cross-var replace-in-file \"@SCREENSAVER_CARD_VERSION_PLACEHOLDER@\" \"$npm_package_version\" \"dist/screensaver-card.js\"",
-        "rollup": "npx rollup -c",
-        "postbuild": "mkdir -p dist/fonts dist/icons && cp -r fonts/* dist/fonts/ || echo 'No fonts to copy' && cp -r icons/* dist/icons/ || echo 'No icons to copy'"
-    },
+        "rollup": "npx rollup -c" 
+        },
     "author": "Maurizio Arci",
     "license": "MIT",
     "devDependencies": {
