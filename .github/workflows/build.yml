@@ -27,4 +27,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: local-conditional-card
-          path: dist/local-conditional-card.js
+          path: dist/screensaver-card.js
