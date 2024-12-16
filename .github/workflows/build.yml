@@ -28,3 +28,4 @@ jobs:
         with:
           name: local-conditional-card
           path: dist/screensaver-card.js
+          
