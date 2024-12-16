@@ -19,15 +19,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - name: Build
+      - name: Install and Build
         run: |
           npm install
           npm run build
-          # Copia fonts e icons nella directory dist
+      - name: Prepare Files
+        run: |
           mkdir -p dist/fonts dist/icons
-          cp -R fonts/* dist/fonts/
-          cp -R icons/* dist/icons/
-      - name: Archive built files
+          cp -R fonts dist/
+          cp -R icons dist/
+      - name: Archive Built Files
         uses: actions/upload-artifact@v3
         with:
           name: screensaver-card-build
