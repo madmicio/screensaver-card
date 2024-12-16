@@ -26,7 +26,9 @@ jobs:
 
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/screensaver-card.js
+          file: |
+            dist/screensaver-card.js
+            graphic/*
           asset_name: screensaver-card.js
           tag: ${{ github.ref }}
           overwrite: true
