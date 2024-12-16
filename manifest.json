@@ -1,11 +1,10 @@
 {
-    "domain": "screensaver-card",
-    "name": "Screensaver Card",
-    "version": "1.0.0",
-    "documentation": "https://github.com/madmicio/screensaver-card-test",
-    "dependencies": [],
-    "codeowners": ["@madmicio"],
-    "requirements": [],
-    "config_flow": false,
-    "iot_class": "cloud_polling"
-  }
+  "name": "Screensaver Card",
+  "version": "1.0.0",
+  "resources": [
+      {
+          "url": "/hacsfiles/screensaver-card-test2/screensaver-card.js",
+          "type": "module"
+      }
+  ]
+}
