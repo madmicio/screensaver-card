@@ -23,12 +23,13 @@ jobs:
         run: |
           npm install
           npm run build
-      - name: Archive built file
+          # Copia fonts e icons nella directory dist
+          mkdir -p dist/fonts dist/icons
+          cp -R fonts/* dist/fonts/
+          cp -R icons/* dist/icons/
+      - name: Archive built files
         uses: actions/upload-artifact@v3
         with:
-          name: local-conditional-card
-          path: |
-            dist/screensaver-card.js
-            fonts/
-            icons/
+          name: screensaver-card-build
+          path: dist/
           
