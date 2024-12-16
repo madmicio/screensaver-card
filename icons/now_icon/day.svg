@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 416.4 308">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke: #ffbf1f;
+        stroke-miterlimit: 10;
+        stroke-width: 7px;
+      }
+
+      .cls-2 {
+        stroke-linecap: round;
+      }
+    </style>
+  </defs>
+  <!-- Generator: Adobe Illustrator 28.7.3, SVG Export Plug-In . SVG Version: 1.2.0 Build 164)  -->
+  <g>
+    <g id="Livello_1">
+      <g id="day">
+        <g id="Livello_2">
+          <g id="sole">
+            <circle class="cls-1" cx="277" cy="144.8" r="63"/>
+            <line class="cls-2" x1="358" y1="145.8" x2="412" y2="145.8"/>
+            <line class="cls-2" x1="335" y1="88.2" x2="373.2" y2="50.1"/>
+            <line class="cls-2" x1="278" y1="63.8" x2="278" y2="9.8"/>
+            <line class="cls-2" x1="220.4" y1="86.8" x2="182.2" y2="48.6"/>
+            <line class="cls-2" x1="196" y1="143.8" x2="142" y2="143.8"/>
+            <line class="cls-2" x1="219" y1="201.4" x2="180.8" y2="239.6"/>
+            <line class="cls-2" x1="276" y1="225.8" x2="276" y2="279.8"/>
+            <line class="cls-2" x1="333.6" y1="202.8" x2="371.8" y2="241"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
