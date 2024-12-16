@@ -19,21 +19,16 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - name: Install Dependencies and Build
-        run: |
-          npm install
-          npm run build
-      - name: Copy Fonts and Icons
-        run: |
-          mkdir -p dist/fonts dist/icons
-          cp -r fonts/* dist/fonts/ || echo "No fonts to copy"
-          cp -r icons/* dist/icons/ || echo "No icons to copy"
-      - name: Archive All Built Files
-        uses: actions/upload-artifact@v3
-        with:
-          name: screensaver-card-build
-          path: dist/
-      - name: Archive graphic
-        uses: actions/upload-artifact@v3
-        with:
-          path: graphic/
+      # - name: Install Dependencies and Build
+      #   run: |
+      #     npm install
+      #     npm run build
+      # - name: Archive All Built Files
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: screensaver-card-build
+      #     path: dist/
+      # - name: Archive graphic
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     path: graphic/
