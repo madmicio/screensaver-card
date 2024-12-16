@@ -9,30 +9,42 @@ jobs:
     name: Prepare release
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      # Check out the repository
+      - uses: actions/checkout@v3
       
+      # Set up Node.js
       - uses: actions/setup-node@v3
         with:
           node-version: 20
 
+      # Build the files
       - name: Build the file
         run: |
           npm install
           npm version --git-tag-version=false --commit-hooks=false "${{ github.event.release.tag_name }}"
           npm run build
 
+      # Upload the main build result
       - name: Upload build result to release
         uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/screensaver-card.js
           asset_name: screensaver-card.js
-          tag: ${{ github.ref }}
+          tag: ${{ github.event.release.tag_name }}
           overwrite: true
       
+      # Install GitHub CLI
+      - name: Install GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+
+      # Upload individual files from the "graphic" directory
       - name: Upload individual files
         run: |
           for file in graphic/**/*; do
+            echo "Uploading $file"
             gh release upload "${{ github.event.release.tag_name }}" "$file" --clobber
           done
         env:
