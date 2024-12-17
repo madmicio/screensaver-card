@@ -324,6 +324,138 @@ export class ScreensaverCard extends LitElement {
     `;
   }
 
+  private isStateOn(entityState: any): boolean {
+    if (!entityState) return false;
+  
+    const state = entityState.state.toLowerCase();
+    const numericState = Number(state);
+  
+    const activeStringStates = [
+      'on', 'open', 'opening', 'closing', 'cleaning', 'true', 'idle', 'home', 
+      'playing', 'paused', 'locked', 'occupied', 'available', 'running', 'active', 
+      'connected', 'online', 'mowing', 'starting', 'heat', 'cool', 'dry', 
+      'heat_cool', 'fan_only', 'auto', 'alarm'
+    ];
+  
+    return activeStringStates.includes(state) || numericState > 0;
+  }
+
+  private coverIcon(): string {
+    const coverType = this.getEntityAttribute('device_class', this.config.entity);
+  
+    switch (coverType) {
+      case 'awning': return "mdi:awning-outline";
+      case 'blind': return "mdi:blinds-open";
+      case 'curtain': return "mdi:curtains-open";
+      case 'damper': return "mdi:window-shutter-open";
+      case 'door': return "mdi:door-open";
+      case 'garage': return "mdi:garage-open";
+      case 'gate': return "mdi:gate-open";
+      case 'shade': return "mdi:roller-shade";
+      case 'shutter': return "mdi:window-shutter-open";
+      case 'window': return "mdi:window-open";
+      default: return "mdi:window-shutter-open";
+    }
+  }
+
+  private binarySensorIcon(): string {
+    const binarySensorType = this.getEntityAttribute('device_class', this.config.entity);
+  
+    switch (binarySensorType) {
+      case 'battery': return "mdi:battery-outline";
+      case 'battery_charging': return "mdi:battery-charging";
+      case 'cold': return "mdi:snowflake";
+      case 'connectivity': return "mdi:server-network";
+      case 'door': return "mdi:door-open";
+      case 'garage_door': return "mdi:garage-open";
+      case 'heat': return "mdi:fire";
+      case 'light': return "mdi:brightness-7";
+      case 'lock': return "mdi:lock-open";
+      case 'moisture': return "mdi:water";
+      case 'motion': return "mdi:motion-sensor";
+      case 'occupancy': return "mdi:home";
+      case 'opening': return "mdi:square-outline";
+      case 'plug': return "mdi:power-plug";
+      case 'power': return "mdi:power-plug";
+      case 'presence': return "mdi:home";
+      case 'running': return "mdi:play";
+      case 'safety': return "mdi:alert-circle";
+      case 'smoke': return "mdi:smoke";
+      case 'sound': return "mdi:music-note";
+      case 'tamper': return "mdi:alert-circle";
+      case 'update': return "mdi:package-up";
+      case 'vibration': return "mdi:vibrate";
+      case 'window': return "mdi:window-open";
+      default: return "mdi:checkbox-marked-circle";
+    }
+  }
+
+  private sensorIcon(): string {
+    const sensorType = this.getEntityAttribute('device_class', this.config.entity);
+    const state = Number(this.hass.states[this.config.entity]?.state) || 0;
+  
+    switch (sensorType) {
+      case 'battery':
+        if (state >= 90) return "mdi:battery";
+        if (state >= 80) return "mdi:battery-90";
+        if (state >= 70) return "mdi:battery-80";
+        if (state >= 60) return "mdi:battery-70";
+        if (state >= 50) return "mdi:battery-60";
+        if (state >= 40) return "mdi:battery-50";
+        if (state >= 30) return "mdi:battery-40";
+        if (state >= 20) return "mdi:battery-30";
+        if (state >= 10) return "mdi:battery-20";
+        return "mdi:battery-alert";
+      case 'humidity': return "mdi:water-percent";
+      case 'illuminance': return "mdi:brightness-5";
+      case 'temperature': return "mdi:thermometer";
+      case 'pressure': return "mdi:gauge";
+      case 'power': return "mdi:flash";
+      case 'signal_strength': return "mdi:wifi";
+      case 'energy': return "mdi:lightning-bolt";
+      default: return "mdi:eye";
+    }
+  }
+
+  private defaultIcons: { [key: string]: string } = {
+    alarm_control_panel: 'mdi:shield',
+    alert: "mdi:alert",
+    automation: "mdi:playlist-play",
+    calendar: "mdi:calendar",
+    camera: "mdi:video",
+    climate: "mdi:thermostat",
+    device_tracker: "mdi:account",
+    fan: "mdi:fan",
+    light: "mdi:lightbulb",
+    lock: 'mdi:lock',
+    media_player: 'mdi:speaker',
+    person: "mdi:account",
+    plant: "mdi:flower",
+    remote: "mdi:remote",
+    scene: "mdi:palette",
+    script: "mdi:file-document",
+    switch: "mdi:flash",
+    timer: "mdi:timer",
+    vacuum: "mdi:robot-vacuum",
+    weather: "mdi:white-balance-sunny",
+    sun: "mdi:white-balance-sunny",
+  };
+  
+
+  // Recupera un attributo specifico di un'entità
+  private getEntityAttribute(attribute: string, entity: string = this.config.entity): string {
+    if (!attribute) return '';
+
+    const entityState = this.hass.states[entity];
+    return entityState?.attributes?.[attribute] ?? '';
+  }
+
+  // Controlla se l'entità appartiene a un tipo specifico
+  private isEntityType(entityType: string): boolean {
+    return this.config.entity?.startsWith(entityType + ".") ?? false;
+  }
+    
+
   render(): TemplateResult {
     const hourlyForecast = this.getHourlyForecast();
     const limitedForecast = hourlyForecast.slice(0, 16); // Prendi i primi 12 elementi
@@ -391,21 +523,34 @@ export class ScreensaverCard extends LitElement {
 
                   // Ottieni lo stato dell'entità da Home Assistant
                   const entityState = this.hass.states[entityId];
-
-                  // Controlla se l'entità esiste e il suo stato è "on"
-                  if (!entityState || entityState.state !== "on") {
-                    return ""; // Non renderizzare nulla se l'entità non è "on"
+                  if (!entityState || !this.isStateOn(entityState)) {
+                    return ""; // Non renderizzare nulla se l'entità non è attiva
                   }
 
-                  // Usa l'icona configurata oppure quella predefinita di Home Assistant
-                  const icon = customIcon || entityState.attributes.icon;
+                  // Determina il tipo dell'entità e il device_class
+                  const entityType = entityId.split(".")[0]; // Ottieni il tipo dell'entità (es: sensor, cover)
+                  const deviceClass = entityState.attributes.device_class;
+
+                  // Icona finale da visualizzare
+                  let icon;
+
+                  if (customIcon) {
+                    icon = customIcon; // Usa l'icona configurata
+                  } else if (this.isEntityType("cover")) {
+                    icon = this.coverIcon(); // Icona specifica per cover
+                  } else if (this.isEntityType("binary_sensor")) {
+                    icon = this.binarySensorIcon(); // Icona specifica per binary_sensor
+                  } else if (this.isEntityType("sensor")) {
+                    icon = this.sensorIcon(); // Icona specifica per sensor
+                  } else {
+                    icon = this.defaultIcons[entityType] || this.getAttribute("icon") || "mdi:eye";
+                  }
 
                   return html`
                     <ha-icon
                       .icon="${icon}"
                       style="margin: 0 8px; font-size: 24px;"
-                      title="${entityState.attributes.friendly_name ||
-                      entityId}"
+                      title="${entityState.attributes.friendly_name || entityId}"
                     ></ha-icon>
                   `;
                 })
