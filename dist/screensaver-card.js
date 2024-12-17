@@ -467,7 +467,13 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       margin-bottom: 10px;
       }
 
-      
+      ha-dialog .content .element-preview > * {
+        transform: scale(0.5); /* Riduce il contenuto del 50% */
+        transform-origin: top left; /* Punto di partenza della trasformazione */
+        width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
+        height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
+        overflow: hidden; /* Nasconde il contenuto fuoriuscente */
+      }
     `;
     }
     render() {
