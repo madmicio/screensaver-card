@@ -83,6 +83,10 @@ const i=(i,e)=>"method"===e.kind&&e.descriptor&&!("value"in e.descriptor)?{...e,
  * SPDX-License-Identifier: BSD-3-Clause
  */var n;null!=(null===(n=window.HTMLSlotElement)||void 0===n?void 0:n.prototype.assignedElements)?(o,n)=>o.assignedElements(n):(o,n)=>o.assignedNodes(n).filter((o=>o.nodeType===Node.ELEMENT_NODE));
 
+const CARD_VERSION = "v@SCREENSAVERL_CARD_VERSION_PLACEHOLDER@";
+const CARD_TAG_NAME = "screensaver-card";
+const EDITOR_CARD_TAG_NAME = "screensaver-editor";
+
 var styles = i$2 `
     ha-card {
     background-color: black;
@@ -288,7 +292,580 @@ var styles = i$2 `
     }
 `;
 
+// Controlla se lo stato dell'entità è "attivo"
+function isStateOn(entityState) {
+    if (!entityState)
+        return false;
+    const state = entityState.state.toLowerCase();
+    const numericState = Number(state);
+    const activeStringStates = [
+        'on', 'open', 'opening', 'closing', 'cleaning', 'true', 'idle', 'home',
+        'playing', 'paused', 'locked', 'occupied', 'available', 'running', 'active',
+        'connected', 'online', 'mowing', 'starting', 'heat', 'cool', 'dry',
+        'heat_cool', 'fan_only', 'auto', 'alarm'
+    ];
+    return activeStringStates.includes(state) || numericState > 0;
+}
+// Restituisce l'icona per una entità di tipo "cover"
+function coverIcon(deviceClass) {
+    switch (deviceClass) {
+        case 'awning': return "mdi:awning-outline";
+        case 'blind': return "mdi:blinds-open";
+        case 'curtain': return "mdi:curtains-open";
+        case 'damper': return "mdi:window-shutter-open";
+        case 'door': return "mdi:door-open";
+        case 'garage': return "mdi:garage-open";
+        case 'gate': return "mdi:gate-open";
+        case 'shade': return "mdi:roller-shade";
+        case 'shutter': return "mdi:window-shutter-open";
+        case 'window': return "mdi:window-open";
+        default: return "mdi:window-shutter-open";
+    }
+}
+// Restituisce l'icona per una entità di tipo "binary_sensor"
+function binarySensorIcon(deviceClass) {
+    switch (deviceClass) {
+        case 'battery': return "mdi:battery-outline";
+        case 'motion': return "mdi:motion-sensor";
+        case 'door': return "mdi:door-open";
+        case 'garage_door': return "mdi:garage-open";
+        default: return "mdi:checkbox-marked-circle";
+    }
+}
+// Restituisce l'icona per una entità di tipo "sensor"
+function sensorIcon(deviceClass, state) {
+    switch (deviceClass) {
+        case 'battery':
+            if (state >= 90)
+                return "mdi:battery";
+            if (state >= 80)
+                return "mdi:battery-90";
+            if (state >= 70)
+                return "mdi:battery-80";
+            if (state >= 60)
+                return "mdi:battery-70";
+            if (state >= 50)
+                return "mdi:battery-60";
+            if (state >= 40)
+                return "mdi:battery-50";
+            if (state >= 30)
+                return "mdi:battery-40";
+            if (state >= 20)
+                return "mdi:battery-30";
+            if (state >= 10)
+                return "mdi:battery-20";
+            return "mdi:battery-alert";
+        case 'humidity': return "mdi:water-percent";
+        case 'temperature': return "mdi:thermometer";
+        default: return "mdi:eye";
+    }
+}
+// Recupera un attributo specifico di un'entità
+function getEntityAttribute(hass, entity, attribute) {
+    const entityState = hass.states[entity];
+    return entityState?.attributes?.[attribute] ?? '';
+}
+// Controlla se un'entità appartiene a un tipo specifico
+function isEntityType(entity, entityType) {
+    return entity?.startsWith(entityType + ".") ?? false;
+}
+// Icone di default per entità generiche
+const defaultIcons = {
+    alarm_control_panel: 'mdi:shield',
+    alert: "mdi:alert",
+    automation: "mdi:playlist-play",
+    calendar: "mdi:calendar",
+    camera: "mdi:video",
+    climate: "mdi:thermostat",
+    device_tracker: "mdi:account",
+    fan: "mdi:fan",
+    light: "mdi:lightbulb",
+    lock: 'mdi:lock',
+    media_player: 'mdi:speaker',
+    person: "mdi:account",
+    plant: "mdi:flower",
+    remote: "mdi:remote",
+    scene: "mdi:palette",
+    script: "mdi:file-document",
+    switch: "mdi:flash",
+    timer: "mdi:timer",
+    vacuum: "mdi:robot-vacuum",
+    weather: "mdi:white-balance-sunny",
+    sun: "mdi:white-balance-sunny",
+};
+
+let ScreesaverEditor = class ScreesaverEditor extends s {
+    constructor() {
+        super(...arguments);
+        this._valueEntities = []; // Stato per le entità value_entity
+        this._entityIcons = []; // Stato locale per entity_icon
+    }
+    setConfig(config) {
+        this._config = config;
+        this._valueEntities = config?.value_entity || [];
+        this._entityIcons = config?.entity_icon || []; // Inizializza _entityIcons con i dati presenti in config
+    }
+    static get styles() {
+        return i$2 `
+      .heading {
+        font-weight: bold;
+        margin-bottom: 1ch;
+      }
+  
+      .select-container {
+        display: flex;
+        flex-direction: column;
+        margin-top: 1ch;
+        width: 100%;
+      }
+  
+      ul {
+        padding: 0;
+        list-style: none;
+      }
+  
+      li {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 1.5ch;
+      }
+
+      .val_sel {
+       display: flex;
+        // flex-direction: column;
+        margin-bottom: 1.5ch;
+      }
+  
+      ha-icon-picker {
+        margin-top: 0.5ch;
+      }
+  
+      ha-icon {
+        cursor: pointer;
+        margin-left: auto;
+      }
+
+      .select-item, .select-weather {
+          height: 60px;
+          border-radius: 16px;
+      }
+      .select-weather {
+      margin-bottom: 10px;
+      }
+
+      ha-expansion-panel {
+      margin-bottom: 10px;
+      }
+    `;
+    }
+    render() {
+        if (!this._config) {
+            return x `<div class="heading">No configuration available</div>`;
+        }
+        return x `
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:weather-partly-cloudy"></ha-icon>
+          Weather Entity Selector
+        </h4>
+        <div class="content">${this._renderWeatherSelector()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:playlist-plus"></ha-icon>
+          Value Entity Selector
+        </h4>
+        <div class="content">${this._renderValueEntitySelector()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:palette"></ha-icon>
+          Entity Icon Selector
+        </h4>
+        <div class="content">${this._renderEntityIconSelector()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:thermometer"></ha-icon>
+          Temperature Sensor Selector
+        </h4>
+        <div class="content">${this._renderSensorDropdown()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:link"></ha-icon>
+          Landing Page Input
+        </h4>
+        <div class="content">${this._renderLandingPageInput()}</div>
+      </ha-expansion-panel>
+    `;
+    }
+    _renderWeatherSelector() {
+        const weatherEntities = this._getWeatherEntities();
+        return x `
+      <div class="select-container">
+        <div class="heading">Select Weather Entity</div>
+        <select @change=${this._updateWeatherEntity} class="select-weather">
+          <option value="" ?selected=${!this._config?.entity}>
+            -- Select an entity --
+          </option>
+          ${weatherEntities.map((entity) => x `<option
+                value=${entity}
+                ?selected=${this._config?.entity === entity}
+              >
+                ${entity}
+              </option>`)}
+        </select>
+      </div>
+    `;
+    }
+    _renderValueEntitySelector() {
+        const allEntities = Object.keys(this.hass.states); // Recupera tutte le entità disponibili
+        return x `
+      <div class="select-container">
+        <div class="heading">Add Entities to value_entity</div>
+        <div style="display: flex; align-items: center;">
+          <select id="value_entity_select" class="select-item">
+            <option value="">-- Select an Entity --</option>
+            ${allEntities.map((entityId) => x `<option value="${entityId}">${entityId}</option>`)}
+          </select>
+          <ha-icon
+            icon="mdi:plus"
+            @click=${this._addEntityToValueEntity}
+          ></ha-icon>
+        </div>
+        ${this._renderValueEntityList()}
+      </div>
+    `;
+    }
+    _renderValueEntityList() {
+        return x `
+      <div style="margin-top: 1ch;">
+        ${this._valueEntities.length > 0
+            ? x `
+              <ul>
+                ${this._valueEntities.map((entity) => x `
+                    <div class="val_sel">
+                      <span>${entity}</span>
+                      <ha-icon
+                        icon="mdi:delete"
+                        @click=${() => this._removeEntityFromValueEntity(entity)}
+                      ></ha-icon>
+                    </div>
+                  `)}
+              </ul>
+            `
+            : x `<p>No entities selected.</p>`}
+      </div>
+    `;
+    }
+    _getWeatherEntities() {
+        return Object.keys(this.hass.states).filter((entityId) => entityId.startsWith("weather."));
+    }
+    _updateWeatherEntity(event) {
+        const selectedEntity = event.target.value;
+        this._config = { ...this._config, entity: selectedEntity };
+        this._dispatchConfigUpdate();
+    }
+    _addEntityToValueEntity() {
+        const selectElement = this.shadowRoot.getElementById("value_entity_select");
+        if (selectElement && selectElement.value) {
+            const entityId = selectElement.value;
+            if (!this._valueEntities.includes(entityId)) {
+                this._valueEntities = [...this._valueEntities, entityId];
+                this._config = { ...this._config, value_entity: this._valueEntities };
+                this._dispatchConfigUpdate();
+            }
+            selectElement.value = ""; // Resetta il menu
+        }
+    }
+    _removeEntityFromValueEntity(entityId) {
+        this._valueEntities = this._valueEntities.filter((id) => id !== entityId);
+        this._config = { ...this._config, value_entity: this._valueEntities };
+        this._dispatchConfigUpdate();
+    }
+    _renderEntityIconSelector() {
+        const allEntities = Object.keys(this.hass.states); // Lista di tutte le entità disponibili
+        return x `
+      <div class="select-container">
+        <div class="heading">Add Entities for entity_icon</div>
+        <div style="display: flex; align-items: center;">
+          <select id="entity_icon_select" class="select-item">
+            <option value="">-- Select an Entity --</option>
+            ${allEntities.map((entityId) => x `<option value=${entityId}>${entityId}</option>`)}
+          </select>
+          <ha-icon
+            icon="mdi:plus"
+            @click=${this._addEntityToEntityIcon}
+          ></ha-icon>
+        </div>
+        ${this._renderEntityIconList()}
+      </div>
+    `;
+    }
+    _addEntityToEntityIcon() {
+        const selectElement = this.shadowRoot.getElementById("entity_icon_select");
+        if (selectElement && selectElement.value) {
+            const entityId = selectElement.value;
+            // Verifica che l'entità non sia già presente
+            if (!this._entityIcons.some((e) => e.entity === entityId)) {
+                this._entityIcons = [...this._entityIcons, { entity: entityId }];
+                this._updateEntityIconConfig();
+            }
+            selectElement.value = ""; // Resetta il menu
+        }
+    }
+    _renderEntityIconList() {
+        return x `
+      <div style="margin-top: 1ch;">
+        ${this._entityIcons.length > 0
+            ? x `
+              <ul>
+                ${this._entityIcons.map((entityConfig, index) => {
+                const entityId = entityConfig.entity;
+                const customIcon = entityConfig.icon;
+                // Stato dell'entità da hass
+                const entityState = this.hass.states[entityId];
+                // Determina il tipo e il device_class
+                const entityType = entityId.split(".")[0];
+                const deviceClass = entityState?.attributes?.device_class;
+                // Icona finale da visualizzare
+                let icon;
+                if (customIcon) {
+                    icon = customIcon;
+                }
+                else if (isEntityType(entityId, "cover")) {
+                    icon = coverIcon(deviceClass);
+                }
+                else if (isEntityType(entityId, "binary_sensor")) {
+                    icon = binarySensorIcon(deviceClass);
+                }
+                else if (isEntityType(entityId, "sensor")) {
+                    const state = Number(entityState?.state) || 0;
+                    icon = sensorIcon(deviceClass, state);
+                }
+                else {
+                    icon =
+                        defaultIcons[entityType] ||
+                            getEntityAttribute(this.hass, entityId, "icon") ||
+                            "mdi:eye";
+                }
+                return x `
+                    <li>
+                      <div style="display: flex; flex-direction: column;">
+                        <!-- Nome entità -->
+                        <div style="display: flex; align-items: center;">
+                          <span>${entityId}</span>
+                          <ha-icon
+                            icon="mdi:delete"
+                            style="margin-left: auto; cursor: pointer;"
+                            @click=${() => this._removeEntityFromEntityIcon(index)}
+                          ></ha-icon>
+                        </div>
+
+                        <!-- Icon Picker -->
+                        <div class="icon-picker" style="margin-top: 0.5ch;">
+                          <ha-icon-picker
+                            label="Select an icon"
+                            .value=${customIcon || icon}
+                            @value-changed=${(e) => this._updateEntityIcon(index, e.detail.value)}
+                          ></ha-icon-picker>
+                        </div>
+                      </div>
+                    </li>
+                  `;
+            })}
+              </ul>
+            `
+            : x `<p>No entities added yet.</p>`}
+      </div>
+    `;
+    }
+    _removeEntityFromEntityIcon(index) {
+        this._entityIcons = this._entityIcons.filter((_, i) => i !== index);
+        this._updateEntityIconConfig();
+    }
+    _changeEntityIcon(index) {
+        const customIcon = prompt("Enter the new icon (e.g., mdi:lightbulb):", "");
+        if (customIcon) {
+            const updatedIcons = [...this._entityIcons];
+            updatedIcons[index] = { ...updatedIcons[index], icon: customIcon };
+            this._entityIcons = updatedIcons;
+            this._updateEntityIconConfig();
+        }
+    }
+    _updateEntityIconConfig() {
+        this._config = { ...this._config, entity_icon: this._entityIcons };
+        this._dispatchConfigUpdate();
+    }
+    _dispatchConfigUpdate() {
+        const event = new CustomEvent("config-changed", {
+            detail: { config: this._config },
+            bubbles: true,
+            composed: true,
+        });
+        this.dispatchEvent(event);
+    }
+    _updateEntityIcon(index, newIcon) {
+        const updatedIcons = [...this._entityIcons];
+        updatedIcons[index] = { ...updatedIcons[index], icon: newIcon }; // Aggiorna l'icona
+        this._entityIcons = updatedIcons;
+        this._updateEntityIconConfig();
+    }
+    _renderSensorDropdown() {
+        // Filtra solo i sensori con device_class="temperature"
+        const temperatureSensors = Object.keys(this.hass.states).filter((entityId) => {
+            const entity = this.hass.states[entityId];
+            return (entityId.startsWith("sensor.") &&
+                entity.attributes?.device_class === "temperature");
+        });
+        return x `
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Select Internal Temperature Sensor</div>
+        <div style="display: flex; align-items: center;">
+          <select id="internal_temperature_select" class="select-item">
+            <option value="" ?selected=${!this._config?.internal_temperature}>
+              -- Select a Temperature Sensor --
+            </option>
+            ${temperatureSensors.map((entityId) => x `
+                <option
+                  value=${entityId}
+                  ?selected=${this._config?.internal_temperature === entityId}
+                >
+                  ${entityId}
+                </option>
+              `)}
+          </select>
+          <ha-icon
+            icon="mdi:check"
+            style="cursor: pointer; margin-left: 1ch;"
+            @click=${this._setInternalTemperatureSensor}
+          ></ha-icon>
+        </div>
+
+        <!-- Visualizza l'entità selezionata con l'icona cestino -->
+        ${this._config?.internal_temperature
+            ? x `
+              <div style="display: flex; align-items: center; margin-top: 1ch;">
+                <span style="flex: 1;">
+                  Selected:
+                  <strong>${this._config.internal_temperature}</strong>
+                </span>
+                <ha-icon
+                  icon="mdi:delete"
+                  style="cursor: pointer;"
+                  @click=${this._removeInternalTemperatureSensor}
+                ></ha-icon>
+              </div>
+            `
+            : ""}
+      </div>
+    `;
+    }
+    _removeInternalTemperatureSensor() {
+        const { internal_temperature, ...newConfig } = this._config; // Rimuove la chiave internal_temperature
+        this._config = newConfig;
+        this._dispatchConfigUpdate();
+    }
+    _setInternalTemperatureSensor() {
+        const selectElement = this.shadowRoot.getElementById("internal_temperature_select");
+        const selectedValue = selectElement.value;
+        if (selectedValue) {
+            this._config = {
+                ...this._config,
+                internal_temperature: selectedValue,
+            };
+        }
+        else {
+            // Rimuove la chiave se selezione vuota
+            this._removeInternalTemperatureSensor();
+        }
+        this._dispatchConfigUpdate();
+    }
+    _renderLandingPageInput() {
+        return x `
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Set Landing Page</div>
+        <div style="display: flex; align-items: center;">
+          <input
+            type="text"
+            id="landing_page_input"
+            placeholder="Enter landing page URL es.: /lovelace/0"
+            .value=${this._config?.landing_page || ""}
+            @input=${this._updateLandingPage}
+            style="flex: 1; padding: 0.5ch; font-size: 1em; border: 1px solid var(--divider-color);"
+          />
+          <ha-icon
+            icon="mdi:delete"
+            style="cursor: pointer; margin-left: 1ch;"
+            @click=${this._removeLandingPage}
+          ></ha-icon>
+        </div>
+
+        ${this._config?.landing_page
+            ? x `
+              <div style="margin-top: 1ch;">
+                Current: <strong>${this._config.landing_page}</strong>
+              </div>
+            `
+            : ""}
+      </div>
+    `;
+    }
+    _updateLandingPage(event) {
+        const inputElement = event.target;
+        const value = inputElement.value;
+        this._config = {
+            ...this._config,
+            landing_page: value,
+        };
+        this._dispatchConfigUpdate();
+    }
+    _removeLandingPage() {
+        const { landing_page, ...newConfig } = this._config; // Rimuove la chiave landing_page
+        this._config = newConfig;
+        this._dispatchConfigUpdate();
+        // Pulisce visivamente l'input text
+        const inputElement = this.shadowRoot.getElementById("landing_page_input");
+        if (inputElement) {
+            inputElement.value = "";
+        }
+    }
+};
+__decorate([
+    n$1({ attribute: false }),
+    __metadata("design:type", Object)
+], ScreesaverEditor.prototype, "hass", void 0);
+__decorate([
+    t(),
+    __metadata("design:type", Object)
+], ScreesaverEditor.prototype, "_config", void 0);
+__decorate([
+    t(),
+    __metadata("design:type", Array)
+], ScreesaverEditor.prototype, "_valueEntities", void 0);
+ScreesaverEditor = __decorate([
+    e$1(EDITOR_CARD_TAG_NAME)
+], ScreesaverEditor);
+
 var ScreensaverCard_1;
+const line1 = "  Screensaver Card  ";
+const line2 = `  version: ${CARD_VERSION}  `;
+/* eslint no-console: 0 */
+console.info(`%c${line1}\n%c${line2}`, "color: orange; font-weight: bold; background: black", "color: white; font-weight: bold; background: dimgray");
+// Allow this card to appear in the card chooser menu
+const windowWithCards = window;
+windowWithCards.customCards = windowWithCards.customCards || [];
+windowWithCards.customCards.push({
+    type: CARD_TAG_NAME,
+    name: "Areas Button Card",
+    preview: true,
+    description: "Areas Button Card",
+});
 let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
     loadLocalFont(scriptDirectory, path) {
         const style = document.createElement("style");
@@ -304,6 +881,10 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
     `;
         document.head.appendChild(style);
     }
+    static getConfigElement() {
+        // Create and return an editor element
+        return document.createElement(EDITOR_CARD_TAG_NAME);
+    }
     static get styles() {
         return styles;
     }
@@ -312,29 +893,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         this.cg_alert = false; // Stato per gestire l'evento cg_alert
         this.events = []; // Array per salvare gli eventi
         this.calendars = []; // Variabile per memorizzare i calendari
-        this.defaultIcons = {
-            alarm_control_panel: 'mdi:shield',
-            alert: "mdi:alert",
-            automation: "mdi:playlist-play",
-            calendar: "mdi:calendar",
-            camera: "mdi:video",
-            climate: "mdi:thermostat",
-            device_tracker: "mdi:account",
-            fan: "mdi:fan",
-            light: "mdi:lightbulb",
-            lock: 'mdi:lock',
-            media_player: 'mdi:speaker',
-            person: "mdi:account",
-            plant: "mdi:flower",
-            remote: "mdi:remote",
-            scene: "mdi:palette",
-            script: "mdi:file-document",
-            switch: "mdi:flash",
-            timer: "mdi:timer",
-            vacuum: "mdi:robot-vacuum",
-            weather: "mdi:white-balance-sunny",
-            sun: "mdi:white-balance-sunny",
-        };
         const scriptPath = new URL(import.meta.url).pathname;
         const scriptDirectory = scriptPath.substring(0, scriptPath.lastIndexOf("/"));
         this.loadLocalFont(scriptDirectory, scriptPath);
@@ -502,7 +1060,12 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                     return x `<div>Entità non trovata: ${entityId}</div>`;
                 }
                 const friendlyName = entityState.attributes.friendly_name || entityId;
-                const state = entityState.state;
+                let state = entityState.state;
+                // Controlla se lo stato è un numero valido e arrotonda
+                const numericState = parseFloat(state);
+                if (!isNaN(numericState) && isFinite(numericState)) {
+                    state = numericState.toFixed(1); // Arrotonda a un solo decimale
+                }
                 const unit = entityState.attributes.unit_of_measurement || "";
                 return x `
                 <div class="entity">
@@ -537,109 +1100,14 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
       </div>
     `;
     }
-    isStateOn(entityState) {
-        if (!entityState)
-            return false;
-        const state = entityState.state.toLowerCase();
-        const numericState = Number(state);
-        const activeStringStates = [
-            'on', 'open', 'opening', 'closing', 'cleaning', 'true', 'idle', 'home',
-            'playing', 'paused', 'locked', 'occupied', 'available', 'running', 'active',
-            'connected', 'online', 'mowing', 'starting', 'heat', 'cool', 'dry',
-            'heat_cool', 'fan_only', 'auto', 'alarm'
-        ];
-        return activeStringStates.includes(state) || numericState > 0;
-    }
-    coverIcon() {
-        const coverType = this.getEntityAttribute('device_class', this.config.entity);
-        switch (coverType) {
-            case 'awning': return "mdi:awning-outline";
-            case 'blind': return "mdi:blinds-open";
-            case 'curtain': return "mdi:curtains-open";
-            case 'damper': return "mdi:window-shutter-open";
-            case 'door': return "mdi:door-open";
-            case 'garage': return "mdi:garage-open";
-            case 'gate': return "mdi:gate-open";
-            case 'shade': return "mdi:roller-shade";
-            case 'shutter': return "mdi:window-shutter-open";
-            case 'window': return "mdi:window-open";
-            default: return "mdi:window-shutter-open";
+    navigateTo(path) {
+        if (this.hass && this.hass.navigate) {
+            this.hass.navigate(path);
         }
-    }
-    binarySensorIcon() {
-        const binarySensorType = this.getEntityAttribute('device_class', this.config.entity);
-        switch (binarySensorType) {
-            case 'battery': return "mdi:battery-outline";
-            case 'battery_charging': return "mdi:battery-charging";
-            case 'cold': return "mdi:snowflake";
-            case 'connectivity': return "mdi:server-network";
-            case 'door': return "mdi:door-open";
-            case 'garage_door': return "mdi:garage-open";
-            case 'heat': return "mdi:fire";
-            case 'light': return "mdi:brightness-7";
-            case 'lock': return "mdi:lock-open";
-            case 'moisture': return "mdi:water";
-            case 'motion': return "mdi:motion-sensor";
-            case 'occupancy': return "mdi:home";
-            case 'opening': return "mdi:square-outline";
-            case 'plug': return "mdi:power-plug";
-            case 'power': return "mdi:power-plug";
-            case 'presence': return "mdi:home";
-            case 'running': return "mdi:play";
-            case 'safety': return "mdi:alert-circle";
-            case 'smoke': return "mdi:smoke";
-            case 'sound': return "mdi:music-note";
-            case 'tamper': return "mdi:alert-circle";
-            case 'update': return "mdi:package-up";
-            case 'vibration': return "mdi:vibrate";
-            case 'window': return "mdi:window-open";
-            default: return "mdi:checkbox-marked-circle";
+        else {
+            window.history.pushState(null, "", path);
+            window.dispatchEvent(new Event("location-changed"));
         }
-    }
-    sensorIcon() {
-        const sensorType = this.getEntityAttribute('device_class', this.config.entity);
-        const state = Number(this.hass.states[this.config.entity]?.state) || 0;
-        switch (sensorType) {
-            case 'battery':
-                if (state >= 90)
-                    return "mdi:battery";
-                if (state >= 80)
-                    return "mdi:battery-90";
-                if (state >= 70)
-                    return "mdi:battery-80";
-                if (state >= 60)
-                    return "mdi:battery-70";
-                if (state >= 50)
-                    return "mdi:battery-60";
-                if (state >= 40)
-                    return "mdi:battery-50";
-                if (state >= 30)
-                    return "mdi:battery-40";
-                if (state >= 20)
-                    return "mdi:battery-30";
-                if (state >= 10)
-                    return "mdi:battery-20";
-                return "mdi:battery-alert";
-            case 'humidity': return "mdi:water-percent";
-            case 'illuminance': return "mdi:brightness-5";
-            case 'temperature': return "mdi:thermometer";
-            case 'pressure': return "mdi:gauge";
-            case 'power': return "mdi:flash";
-            case 'signal_strength': return "mdi:wifi";
-            case 'energy': return "mdi:lightning-bolt";
-            default: return "mdi:eye";
-        }
-    }
-    // Recupera un attributo specifico di un'entità
-    getEntityAttribute(attribute, entity = this.config.entity) {
-        if (!attribute)
-            return '';
-        const entityState = this.hass.states[entity];
-        return entityState?.attributes?.[attribute] ?? '';
-    }
-    // Controlla se l'entità appartiene a un tipo specifico
-    isEntityType(entityType) {
-        return this.config.entity?.startsWith(entityType + ".") ?? false;
     }
     render() {
         const hourlyForecast = this.getHourlyForecast();
@@ -686,8 +1154,9 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         }
         const shouldAlternate = this.config?.value_entity && this.config?.calendars;
         const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
+        this.config.landing_page ? this.config.landing_page : '';
         return x `
-      <ha-card id="dynamic-card" style="padding: 30px;">
+      <ha-card id="dynamic-card" style="padding: 30px;" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
         <div class="main-grid">
           ${this.cg_alert ? x ` <div class="cg-alert"></div> ` : ""}
           <div id="icon-state-div" class="icon-state-div-class">
@@ -698,7 +1167,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                 const customIcon = entityConfig.icon;
                 // Ottieni lo stato dell'entità da Home Assistant
                 const entityState = this.hass.states[entityId];
-                if (!entityState || !this.isStateOn(entityState)) {
+                if (!entityState || !isStateOn(entityState)) {
                     return ""; // Non renderizzare nulla se l'entità non è attiva
                 }
                 // Determina il tipo dell'entità e il device_class
@@ -709,17 +1178,21 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                 if (customIcon) {
                     icon = customIcon; // Usa l'icona configurata
                 }
-                else if (this.isEntityType("cover")) {
-                    icon = this.coverIcon(); // Icona specifica per cover
+                else if (isEntityType(entityId, "cover")) {
+                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
+                    icon = coverIcon(deviceClass);
                 }
-                else if (this.isEntityType("binary_sensor")) {
-                    icon = this.binarySensorIcon(); // Icona specifica per binary_sensor
+                else if (isEntityType(entityId, "binary_sensor")) {
+                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
+                    icon = binarySensorIcon(deviceClass);
                 }
-                else if (this.isEntityType("sensor")) {
-                    icon = this.sensorIcon(); // Icona specifica per sensor
+                else if (isEntityType(entityId, "sensor")) {
+                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
+                    const state = Number(this.hass.states[entityId]?.state) || 0;
+                    icon = sensorIcon(deviceClass, state);
                 }
                 else {
-                    icon = this.defaultIcons[entityType] || this.getAttribute("icon") || "mdi:eye";
+                    icon = defaultIcons[entityType] || getEntityAttribute(this.hass, entityId, "icon") || "mdi:eye";
                 }
                 return x `
                     <ha-icon
