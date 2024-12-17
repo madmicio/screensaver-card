@@ -1,6 +1,5 @@
 {
     "name": "lovelace Screensaver Card",
     "filename": "screensaver-card.js",
-
     "render_readme" : true
   }
