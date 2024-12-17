@@ -7,6 +7,14 @@ export default css`
     display: flex;
     flex-direction: column;
     }
+
+    .ineditor {
+    transform: scale(0.5); /* Riduce il contenuto del 50% */
+    transform-origin: top left; /* Punto di partenza della trasformazione */
+    width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
+    height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
+    overflow: hidden; /* Nasconde il contenuto fuoriuscente */
+    }
     h2 {
     margin-bottom: 8px;
     }
@@ -202,4 +210,6 @@ export default css`
     opacity: 1;
     transition: opacity 0.5s ease-in-out;
     }
+
+    
 `;

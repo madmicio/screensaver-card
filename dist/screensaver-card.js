@@ -95,6 +95,14 @@ var styles = i$2 `
     display: flex;
     flex-direction: column;
     }
+
+    .ineditor {
+    transform: scale(0.5); /* Riduce il contenuto del 50% */
+    transform-origin: top left; /* Punto di partenza della trasformazione */
+    width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
+    height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
+    overflow: hidden; /* Nasconde il contenuto fuoriuscente */
+    }
     h2 {
     margin-bottom: 8px;
     }
@@ -290,6 +298,8 @@ var styles = i$2 `
     opacity: 1;
     transition: opacity 0.5s ease-in-out;
     }
+
+    
 `;
 
 // Controlla se lo stato dell'entità è "attivo"
@@ -456,6 +466,8 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       ha-expansion-panel {
       margin-bottom: 10px;
       }
+
+      
     `;
     }
     render() {
@@ -892,10 +904,21 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         super();
         this.cg_alert = false; // Stato per gestire l'evento cg_alert
         this.events = []; // Array per salvare gli eventi
+        this._isEditor = false;
         this.calendars = []; // Variabile per memorizzare i calendari
         const scriptPath = new URL(import.meta.url).pathname;
         const scriptDirectory = scriptPath.substring(0, scriptPath.lastIndexOf("/"));
         this.loadLocalFont(scriptDirectory, scriptPath);
+    }
+    _isInEditor() {
+        function isInEditor(e) {
+            return (e.parentElement?.tagName?.toLowerCase() === "hui-card" && "preview" in (e.parentElement?.attributes ?? []))
+                || (e.parentElement?.tagName?.toLowerCase() === "hui-section" && "preview" in (e.parentElement?.attributes ?? []))
+                || e.parentElement?.tagName?.toLowerCase() === "hui-card-preview"
+                || e.parentElement != null && isInEditor(e.parentElement)
+                || e.parentNode?.toString() == "[object ShadowRoot]" && isInEditor(e.getRootNode().host);
+        }
+        return isInEditor(this);
     }
     // Metodo per ottenere i calendari configurati
     async getCalendars() {
@@ -982,6 +1005,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         }
     }
     firstUpdated() {
+        this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
         const card = this.shadowRoot?.getElementById("dynamic-card");
         if (!card) {
             console.error("Could not find the card");
@@ -1128,7 +1152,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         // Combina i componenti con il separatore ` : `
         const formattedDate = `${dayName} : ${day} : ${month} : ${year}`;
         const entityIcons = this.config?.entity_icon || [];
-        this.config?.value_entity || [];
         const weatherEntity = this.config?.entity;
         // Verifica che l'entità di stato del meteo e del sole siano valide
         if (!weatherEntity || !this.hass.states[weatherEntity]) {
@@ -1154,9 +1177,8 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         }
         const shouldAlternate = this.config?.value_entity && this.config?.calendars;
         const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
-        this.config.landing_page ? this.config.landing_page : '';
         return x `
-      <ha-card id="dynamic-card" style="padding: 30px;" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
+      <ha-card id="dynamic-card" style="padding: 30px;" class="${this._isEditor ? 'ineditor' : ''}" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
         <div class="main-grid">
           ${this.cg_alert ? x ` <div class="cg-alert"></div> ` : ""}
           <div id="icon-state-div" class="icon-state-div-class">

@@ -43,6 +43,7 @@ export class ScreensaverCard extends LitElement {
   @state() private hourlyForecastEvent?: any;
   @state() private subscribedToHourlyForecast?: Promise<() => void>;
   @state() private events: any[] = []; // Array per salvare gli eventi
+  private _isEditor: boolean = false;
   private calendars: any[] = []; // Variabile per memorizzare i calendari
   private loadLocalFont(scriptDirectory: string, path: string) {
     const style = document.createElement("style");
@@ -97,7 +98,16 @@ export class ScreensaverCard extends LitElement {
     this.loadLocalFont(scriptDirectory, scriptPath);
   }
 
-  
+  private _isInEditor(): boolean {
+    function isInEditor(e: Element): boolean {
+        return (e.parentElement?.tagName?.toLowerCase() === "hui-card" && "preview" in (e.parentElement?.attributes ?? []))
+            || (e.parentElement?.tagName?.toLowerCase() === "hui-section" && "preview" in (e.parentElement?.attributes ?? []))
+            || e.parentElement?.tagName?.toLowerCase() === "hui-card-preview"
+            || e.parentElement != null && isInEditor(e.parentElement)
+            || e.parentNode?.toString() == "[object ShadowRoot]" && isInEditor((e.getRootNode() as ShadowRoot).host);
+    }
+    return isInEditor(this);
+  }
 
   // Metodo per ottenere i calendari configurati
   private async getCalendars() {
@@ -220,6 +230,7 @@ export class ScreensaverCard extends LitElement {
   }
 
   firstUpdated() {
+    this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
     const card = this.shadowRoot?.getElementById("dynamic-card");
 
     if (!card) {
@@ -380,6 +391,8 @@ export class ScreensaverCard extends LitElement {
       window.dispatchEvent(new Event("location-changed"));
     }
   }
+
+  
   
 
   render(): TemplateResult {
@@ -403,8 +416,6 @@ export class ScreensaverCard extends LitElement {
     // Combina i componenti con il separatore ` : `
     const formattedDate = `${dayName} : ${day} : ${month} : ${year}`;
     const entityIcons = this.config?.entity_icon || [];
-    const valueEntities = this.config?.value_entity || [];
-
     const weatherEntity = this.config?.entity;
 
     // Verifica che l'entità di stato del meteo e del sole siano valide
@@ -436,10 +447,8 @@ export class ScreensaverCard extends LitElement {
     const shouldAlternate = this.config?.value_entity && this.config?.calendars;
     const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
 
-    const navTo = this.config.landing_page ? this.config.landing_page : '';
-
     return html`
-      <ha-card id="dynamic-card" style="padding: 30px;" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
+      <ha-card id="dynamic-card" style="padding: 30px;" class="${this._isEditor ? 'ineditor' : ''}" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
         <div class="main-grid">
           ${this.cg_alert ? html` <div class="cg-alert"></div> ` : ""}
           <div id="icon-state-div" class="icon-state-div-class">
