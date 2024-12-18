@@ -228,6 +228,7 @@ export class ScreensaverCard extends LitElement {
       return "invalid date";
     }
   }
+  
 
   firstUpdated() {
     this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
@@ -449,7 +450,6 @@ export class ScreensaverCard extends LitElement {
 
     return html`
       <ha-card id="dynamic-card" style="padding: 30px;" class="${this._isEditor ? 'ineditor' : ''}" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
-        <div class="main-grid">
           ${this.cg_alert ? html` <div class="cg-alert"></div> ` : ""}
           <div id="icon-state-div" class="icon-state-div-class">
             ${entityIcons.length > 0
@@ -665,7 +665,7 @@ export class ScreensaverCard extends LitElement {
                 : html`<div>No hourly forecast available</div>`}
             </div>
           </div>
-        </div>
+
       </ha-card>
     `;
   }

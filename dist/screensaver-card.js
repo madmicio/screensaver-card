@@ -88,20 +88,29 @@ const CARD_TAG_NAME = "screensaver-card";
 const EDITOR_CARD_TAG_NAME = "screensaver-editor";
 
 var styles = i$2 `
+
     ha-card {
+    height: 100%;
+    
     background-color: black;
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-areas:
+        ". icon icon now_icon alert"
+        ". . . temp ."
+        ". date . cal-event ."
+        "tline tline tline tline tline";
+    grid-template-columns: 7vw auto auto auto 1vw;
+    grid-template-rows: auto auto 1fr auto;
+    padding-top: 1vw;
     }
 
     .ineditor {
-    transform: scale(0.5); /* Riduce il contenuto del 50% */
+    transform: scale(0.3); /* Riduce il contenuto del 50% */
     transform-origin: top left; /* Punto di partenza della trasformazione */
-    width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
-    height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
-    overflow: hidden; /* Nasconde il contenuto fuoriuscente */
+    width: fit-content;
+    // width: 1000px; /* Corregge la larghezza per evitare overflow */
+    // height: 780px; /* Corregge l'altezza per evitare overflow */
+    // overflow: hidden; /* Nasconde il contenuto fuoriuscente */
     }
     h2 {
     margin-bottom: 8px;
@@ -161,19 +170,19 @@ var styles = i$2 `
     color: #9e9e9e;
     font-size: 0.8em;
     }
-    .main-grid {
-    height: 100%;
-    background-color: black;
-    display: grid;
-    grid-template-areas:
-        ". icon icon now_icon alert"
-        ". . . temp ."
-        ". date . cal-event ."
-        "tline tline tline tline tline";
-    grid-template-columns: 7vw auto auto auto 1vw;
-    grid-template-rows: auto auto 1fr auto;
-    padding-top: 1vw;
-    }
+    // .main-grid {
+    // height: 100%;
+    // background-color: black;
+    // display: grid;
+    // grid-template-areas:
+    //     ". icon icon now_icon alert"
+    //     ". . . temp ."
+    //     ". date . cal-event ."
+    //     "tline tline tline tline tline";
+    // grid-template-columns: 7vw auto auto auto 1vw;
+    // grid-template-rows: auto auto 1fr auto;
+    // padding-top: 1vw;
+    // }
     .div-temp {
     grid-area: temp;
     justify-self: end;
@@ -1185,7 +1194,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
         return x `
       <ha-card id="dynamic-card" style="padding: 30px;" class="${this._isEditor ? 'ineditor' : ''}" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
-        <div class="main-grid">
           ${this.cg_alert ? x ` <div class="cg-alert"></div> ` : ""}
           <div id="icon-state-div" class="icon-state-div-class">
             ${entityIcons.length > 0
@@ -1391,7 +1399,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             : x `<div>No hourly forecast available</div>`}
             </div>
           </div>
-        </div>
+
       </ha-card>
     `;
     }

@@ -1,19 +1,28 @@
 import { css } from "lit";
 export default css`
+
     ha-card {
+    height: 100%;
+    
     background-color: black;
-    margin: 0;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-areas:
+        ". icon icon now_icon alert"
+        ". . . temp ."
+        ". date . cal-event ."
+        "tline tline tline tline tline";
+    grid-template-columns: 7vw auto auto auto 1vw;
+    grid-template-rows: auto auto 1fr auto;
+    padding-top: 1vw;
     }
 
     .ineditor {
-    transform: scale(0.5); /* Riduce il contenuto del 50% */
+    transform: scale(0.3); /* Riduce il contenuto del 50% */
     transform-origin: top left; /* Punto di partenza della trasformazione */
-    width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
-    height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
-    overflow: hidden; /* Nasconde il contenuto fuoriuscente */
+    width: fit-content;
+    // width: 1000px; /* Corregge la larghezza per evitare overflow */
+    // height: 780px; /* Corregge l'altezza per evitare overflow */
+    // overflow: hidden; /* Nasconde il contenuto fuoriuscente */
     }
     h2 {
     margin-bottom: 8px;
@@ -73,19 +82,19 @@ export default css`
     color: #9e9e9e;
     font-size: 0.8em;
     }
-    .main-grid {
-    height: 100%;
-    background-color: black;
-    display: grid;
-    grid-template-areas:
-        ". icon icon now_icon alert"
-        ". . . temp ."
-        ". date . cal-event ."
-        "tline tline tline tline tline";
-    grid-template-columns: 7vw auto auto auto 1vw;
-    grid-template-rows: auto auto 1fr auto;
-    padding-top: 1vw;
-    }
+    // .main-grid {
+    // height: 100%;
+    // background-color: black;
+    // display: grid;
+    // grid-template-areas:
+    //     ". icon icon now_icon alert"
+    //     ". . . temp ."
+    //     ". date . cal-event ."
+    //     "tline tline tline tline tline";
+    // grid-template-columns: 7vw auto auto auto 1vw;
+    // grid-template-rows: auto auto 1fr auto;
+    // padding-top: 1vw;
+    // }
     .div-temp {
     grid-area: temp;
     justify-self: end;
