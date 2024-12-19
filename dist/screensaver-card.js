@@ -1209,6 +1209,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         this.cg_alert = !!alertEvent;
     }
     formatEventDate(dateInput) {
+        console.log('date input ', dateInput);
         try {
             const dateStr = typeof dateInput === "object" && "dateTime" in dateInput
                 ? dateInput.dateTime
@@ -1223,19 +1224,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             })}`;
         }
         catch {
-            try {
-                // Se fallisce il parsing, prova a restituire il giorno dell'evento
-                const dayStr = typeof dateInput === "object" && "dateTime" in dateInput
-                    ? new Date(dateInput.dateTime).toLocaleDateString()
-                    : new Date(dateInput).toLocaleDateString();
-                if (isNaN(new Date(dayStr).getTime())) {
-                    return "Unknown Day"; // Fallback in caso di errore anche qui
-                }
-                return dayStr;
-            }
-            catch {
-                return "Unknown Day";
-            }
+            return "invalid date";
         }
     }
     firstUpdated() {
@@ -1349,8 +1338,9 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                 <div class="event">
                   <div class="event-title">${event.summary}</div>
                   <div class="event-time">
-                    ${this.formatEventDate(event.start)} -
-                    ${this.formatEventDate(event.end)}
+                    ${event.start?.dateTime && event.end?.dateTime
+                ? x `${this.formatEventDate(event.start)} - ${this.formatEventDate(event.end)}`
+                : x `${event.start?.date || ""}`}
                   </div>
                 </div>
               `)

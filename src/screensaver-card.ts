@@ -207,6 +207,7 @@ export class ScreensaverCard extends LitElement {
   }
 
   private formatEventDate(dateInput: string | { dateTime: string }): string {
+    console.log('date input ', dateInput);
     try {
       const dateStr =
         typeof dateInput === "object" && "dateTime" in dateInput
@@ -226,24 +227,9 @@ export class ScreensaverCard extends LitElement {
         }
       )}`;
     } catch {
-      try {
-        // Se fallisce il parsing, prova a restituire il giorno dell'evento
-        const dayStr =
-          typeof dateInput === "object" && "dateTime" in dateInput
-            ? new Date(dateInput.dateTime).toLocaleDateString()
-            : new Date(dateInput).toLocaleDateString();
-
-        if (isNaN(new Date(dayStr).getTime())) {
-          return "Unknown Day"; // Fallback in caso di errore anche qui
-        }
-
-        return dayStr;
-      } catch {
-        return "Unknown Day";
-      }
+      return "invalid date";
     }
   }
-
   
 
   firstUpdated() {
@@ -378,7 +364,7 @@ export class ScreensaverCard extends LitElement {
 
   private renderEvents(): TemplateResult {
     if (!this.config?.calendars) return html``;
-
+  
     return html`
       <div class="events">
         ${this.events.length > 0
@@ -387,8 +373,9 @@ export class ScreensaverCard extends LitElement {
                 <div class="event">
                   <div class="event-title">${event.summary}</div>
                   <div class="event-time">
-                    ${this.formatEventDate(event.start)} -
-                    ${this.formatEventDate(event.end)}
+                    ${event.start?.dateTime && event.end?.dateTime
+                      ? html`${this.formatEventDate(event.start)} - ${this.formatEventDate(event.end)}`
+                      : html`${event.start?.date || ""}`}
                   </div>
                 </div>
               `
