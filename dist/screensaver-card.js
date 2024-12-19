@@ -1223,7 +1223,19 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             })}`;
         }
         catch {
-            return "invalid date";
+            try {
+                // Se fallisce il parsing, prova a restituire il giorno dell'evento
+                const dayStr = typeof dateInput === "object" && "dateTime" in dateInput
+                    ? new Date(dateInput.dateTime).toLocaleDateString()
+                    : new Date(dateInput).toLocaleDateString();
+                if (isNaN(new Date(dayStr).getTime())) {
+                    return "Unknown Day"; // Fallback in caso di errore anche qui
+                }
+                return dayStr;
+            }
+            catch {
+                return "Unknown Day";
+            }
         }
     }
     firstUpdated() {
