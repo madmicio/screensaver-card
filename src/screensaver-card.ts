@@ -99,11 +99,16 @@ export class ScreensaverCard extends LitElement {
 
   private _isInEditor(): boolean {
     function isInEditor(e: Element): boolean {
-        return (e.parentElement?.tagName?.toLowerCase() === "hui-card" && "preview" in (e.parentElement?.attributes ?? []))
-            || (e.parentElement?.tagName?.toLowerCase() === "hui-section" && "preview" in (e.parentElement?.attributes ?? []))
-            || e.parentElement?.tagName?.toLowerCase() === "hui-card-preview"
-            || e.parentElement != null && isInEditor(e.parentElement)
-            || e.parentNode?.toString() == "[object ShadowRoot]" && isInEditor((e.getRootNode() as ShadowRoot).host);
+      return (
+        (e.parentElement?.tagName?.toLowerCase() === "hui-card" &&
+          "preview" in (e.parentElement?.attributes ?? [])) ||
+        (e.parentElement?.tagName?.toLowerCase() === "hui-section" &&
+          "preview" in (e.parentElement?.attributes ?? [])) ||
+        e.parentElement?.tagName?.toLowerCase() === "hui-card-preview" ||
+        (e.parentElement != null && isInEditor(e.parentElement)) ||
+        (e.parentNode?.toString() == "[object ShadowRoot]" &&
+          isInEditor((e.getRootNode() as ShadowRoot).host))
+      );
     }
     return isInEditor(this);
   }
@@ -187,21 +192,32 @@ export class ScreensaverCard extends LitElement {
 
   private checkCGAlert(events: any[]) {
     const now = new Date();
-    const alertEvent = events.find((event) => {
-      const start = event.start?.dateTime || event.start;
-      const end = event.end?.dateTime || event.end;
+    const nowDate = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // Solo data senza orario
+
+    // Filtra gli eventi con summary "cg_alert"
+    const cgAlertEvents = events.filter(
+      (event) => event.summary === "cg_alert"
+    );
+
+    const alertEvent = cgAlertEvents.find((event) => {
+      const start = event.start?.dateTime || event.start?.date;
+      const end = event.end?.dateTime || event.end?.date;
       const startDate = new Date(start);
       const endDate = new Date(end);
 
-      return (
-        event.summary === "cg_alert" &&
-        !isNaN(startDate.getTime()) &&
-        !isNaN(endDate.getTime()) &&
-        startDate <= now &&
-        now <= endDate
-      );
+      if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+        if (event.start?.date && event.end?.date) {
+          // Controllo solo sulla data (inclusivo per eventi tutto il giorno)
+          return startDate <= nowDate && nowDate <= endDate;
+        } else if (event.start?.dateTime && event.end?.dateTime) {
+          // Controllo data e orario
+          return startDate <= now && now <= endDate;
+        }
+      }
+      return false;
     });
 
+    // Imposta cg_alert solo se si è nel giorno dell'evento o nell'intervallo orario
     this.cg_alert = !!alertEvent;
   }
 
@@ -228,7 +244,6 @@ export class ScreensaverCard extends LitElement {
       return "invalid date";
     }
   }
-  
 
   firstUpdated() {
     this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
@@ -333,15 +348,14 @@ export class ScreensaverCard extends LitElement {
               }
               const friendlyName =
                 entityState.attributes.friendly_name || entityId;
-              
-                let state = entityState.state;
 
-                // Controlla se lo stato è un numero valido e arrotonda
-                const numericState = parseFloat(state);
-                if (!isNaN(numericState) && isFinite(numericState)) {
-                  state = numericState.toFixed(1); // Arrotonda a un solo decimale
-                }
-                
+              let state = entityState.state;
+
+              // Controlla se lo stato è un numero valido e arrotonda
+              const numericState = parseFloat(state);
+              if (!isNaN(numericState) && isFinite(numericState)) {
+                state = numericState.toFixed(1); // Arrotonda a un solo decimale
+              }
 
               const unit = entityState.attributes.unit_of_measurement || "";
 
@@ -362,7 +376,7 @@ export class ScreensaverCard extends LitElement {
 
   private renderEvents(): TemplateResult {
     if (!this.config?.calendars) return html``;
-  
+
     return html`
       <div class="events">
         ${this.events.length > 0
@@ -372,7 +386,8 @@ export class ScreensaverCard extends LitElement {
                   <div class="event-title">${event.summary}</div>
                   <div class="event-time">
                     ${event.start?.dateTime && event.end?.dateTime
-                      ? html`${this.formatEventDate(event.start)} - ${this.formatEventDate(event.end)}`
+                      ? html`${this.formatEventDate(event.start)} -
+                        ${this.formatEventDate(event.end)}`
                       : html`${event.start?.date || ""}`}
                   </div>
                 </div>
@@ -383,8 +398,6 @@ export class ScreensaverCard extends LitElement {
     `;
   }
 
-  
-
   private navigateTo(path: string) {
     if (this.hass && (this.hass as any).navigate) {
       (this.hass as any).navigate(path);
@@ -393,9 +406,6 @@ export class ScreensaverCard extends LitElement {
       window.dispatchEvent(new Event("location-changed"));
     }
   }
-
-  
-  
 
   render(): TemplateResult {
     const hourlyForecast = this.getHourlyForecast();
@@ -427,7 +437,9 @@ export class ScreensaverCard extends LitElement {
     }
 
     const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
-    const weatherTemperature = this.config.external_temperature ? this.hass.states[this.config.external_temperature].state : this.hass.states[weatherEntity].attributes.temperature;
+    const weatherTemperature = this.config.external_temperature
+      ? this.hass.states[this.config.external_temperature].state
+      : this.hass.states[weatherEntity].attributes.temperature;
     const sunEntity = this.hass.states["sun.sun"];
     if (!sunEntity) {
       console.error("Entità sun.sun non trovata");
@@ -439,7 +451,7 @@ export class ScreensaverCard extends LitElement {
 
     // Determina l'icona del meteo
     let nowWeatherIcon;
-    if (weatherState === "partlycloudy") { 
+    if (weatherState === "partlycloudy") {
       nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night"; // Usa isday per determinare l'icona
     } else {
       nowWeatherIcon = weatherState; // Per tutti gli altri stati
@@ -449,223 +461,246 @@ export class ScreensaverCard extends LitElement {
     const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
 
     return html`
-      <ha-card id="dynamic-card" style="padding: 30px;" class="${this._isEditor ? 'ineditor' : ''}" @click=${() => this.config.landing_page ? this.navigateTo(this.config.landing_page) : null}>
-          ${this.cg_alert ? html` <div class="cg-alert"></div> ` : ""}
-          <div id="icon-state-div" class="icon-state-div-class">
-            ${entityIcons.length > 0
-              ? entityIcons.map((entityConfig: any) => {
-                  // Estrai l'ID dell'entità e l'icona personalizzata
-                  const entityId = entityConfig.entity;
-                  const customIcon = entityConfig.icon;
+      <ha-card
+        id="dynamic-card"
+        style="padding: 30px;"
+        class="${this._isEditor ? "ineditor" : ""}"
+        @click=${() =>
+          this.config.landing_page
+            ? this.navigateTo(this.config.landing_page)
+            : null}
+      >
+        ${this.cg_alert ? html` <div class="cg-alert"></div> ` : ""}
+        <div id="icon-state-div" class="icon-state-div-class">
+          ${entityIcons.length > 0
+            ? entityIcons.map((entityConfig: any) => {
+                // Estrai l'ID dell'entità e l'icona personalizzata
+                const entityId = entityConfig.entity;
+                const customIcon = entityConfig.icon;
 
-                  // Ottieni lo stato dell'entità da Home Assistant
-                  const entityState = this.hass.states[entityId];
-                  if (!entityState || !isStateOn(entityState)) {
-                    return ""; // Non renderizzare nulla se l'entità non è attiva
-                  }
+                // Ottieni lo stato dell'entità da Home Assistant
+                const entityState = this.hass.states[entityId];
+                if (!entityState || !isStateOn(entityState)) {
+                  return ""; // Non renderizzare nulla se l'entità non è attiva
+                }
 
-                  // Determina il tipo dell'entità e il device_class
-                  const entityType = entityId.split(".")[0]; // Ottieni il tipo dell'entità (es: sensor, cover)
-                  const deviceClass = entityState.attributes.device_class;
+                // Determina il tipo dell'entità e il device_class
+                const entityType = entityId.split(".")[0]; // Ottieni il tipo dell'entità (es: sensor, cover)
+                const deviceClass = entityState.attributes.device_class;
 
-                  // Icona finale da visualizzare
-                  let icon;
+                // Icona finale da visualizzare
+                let icon;
 
-                  if (customIcon) {
-                    icon = customIcon; // Usa l'icona configurata
-                  } else if (isEntityType(entityId, "cover")) {
-                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
-                    icon = coverIcon(deviceClass);
-                  } else if (isEntityType(entityId, "binary_sensor")) {
-                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
-                    icon = binarySensorIcon(deviceClass);
-                  } else if (isEntityType(entityId, "sensor")) {
-                    const deviceClass = getEntityAttribute(this.hass, entityId, "device_class");
-                    const state = Number(this.hass.states[entityId]?.state) || 0;
-                    icon = sensorIcon(deviceClass, state);
-                  } else {
-                    icon = defaultIcons[entityType] || getEntityAttribute(this.hass, entityId, "icon") || "mdi:eye";
-                  }
+                if (customIcon) {
+                  icon = customIcon; // Usa l'icona configurata
+                } else if (isEntityType(entityId, "cover")) {
+                  const deviceClass = getEntityAttribute(
+                    this.hass,
+                    entityId,
+                    "device_class"
+                  );
+                  icon = coverIcon(deviceClass);
+                } else if (isEntityType(entityId, "binary_sensor")) {
+                  const deviceClass = getEntityAttribute(
+                    this.hass,
+                    entityId,
+                    "device_class"
+                  );
+                  icon = binarySensorIcon(deviceClass);
+                } else if (isEntityType(entityId, "sensor")) {
+                  const deviceClass = getEntityAttribute(
+                    this.hass,
+                    entityId,
+                    "device_class"
+                  );
+                  const state = Number(this.hass.states[entityId]?.state) || 0;
+                  icon = sensorIcon(deviceClass, state);
+                } else {
+                  icon =
+                    defaultIcons[entityType] ||
+                    getEntityAttribute(this.hass, entityId, "icon") ||
+                    "mdi:eye";
+                }
 
+                return html`
+                  <ha-icon
+                    .icon="${icon}"
+                    style="margin: 0 8px; font-size: 24px;"
+                    title="${entityState.attributes.friendly_name || entityId}"
+                  ></ha-icon>
+                `;
+              })
+            : html`<div>No entities configured or active</div>`}
+        </div>
 
-                  return html`
-                    <ha-icon
-                      .icon="${icon}"
-                      style="margin: 0 8px; font-size: 24px;"
-                      title="${entityState.attributes.friendly_name || entityId}"
-                    ></ha-icon>
-                  `;
-                })
-              : html`<div>No entities configured or active</div>`}
-          </div>
-
-          <div id="date-time">
-            <div class="time">
-              ${currentHour}
-              <div class="date">
-                <div>${dayName}</div>
-                <div>:</div>
-                <div>${day}</div>
-                <div>:</div>
-                <div>${month}</div>
-                <div>:</div>
-                <div>${year}</div>
-              </div>
+        <div id="date-time">
+          <div class="time">
+            ${currentHour}
+            <div class="date">
+              <div>${dayName}</div>
+              <div>:</div>
+              <div>${day}</div>
+              <div>:</div>
+              <div>${month}</div>
+              <div>:</div>
+              <div>${year}</div>
             </div>
-            <!--    <div class="date">${formattedDate}</div> -->
           </div>
+          <!--    <div class="date">${formattedDate}</div> -->
+        </div>
 
-          <div class="now-icon">
-            <img
-              src="https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/now_icon/${nowWeatherIcon}.svg"
-            />
-          </div>
+        <div class="now-icon">
+          <img
+            src="https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/now_icon/${nowWeatherIcon}.svg"
+          />
+        </div>
 
-          <div class="div-temp">
-            ${this.config?.internal_temperature
-              ? (() => {
-                  // Calcola internalTemperatureState se internal_temperature è configurato
-                  const internalTemperature =
-                    this.config?.internal_temperature || "";
-                  const internalTemperatureState =
-                    internalTemperature && this.hass.states[internalTemperature]
-                      ? this.hass.states[internalTemperature].state
-                      : null; // Valore predefinito se non è definito o non esiste
+        <div class="div-temp">
+          ${this.config?.internal_temperature
+            ? (() => {
+                // Calcola internalTemperatureState se internal_temperature è configurato
+                const internalTemperature =
+                  this.config?.internal_temperature || "";
+                const internalTemperatureState =
+                  internalTemperature && this.hass.states[internalTemperature]
+                    ? this.hass.states[internalTemperature].state
+                    : null; // Valore predefinito se non è definito o non esiste
 
-                  // Ritorna l'SVG con il valore calcolato
-                  return html`
-                    <svg
-                      version="1.1"
-                      id="Ñëîé_1"
-                      xmlns="http://www.w3.org/2000/svg"
-                      xmlns:xlink="http://www.w3.org/1999/xlink"
-                      x="0px"
-                      y="0px"
-                      viewBox="0 0 1152.78 354.73"
-                      style="enable-background:new 0 0 1152.78 354.73; height:6vh;"
-                      xml:space="preserve"
-                    >
-                      <style type="text/css">
-                        .st0 {
-                          fill: #757575;
-                        }
-                        .st1 {
-                          font-family: "bw_font";
-                          font-weight: bold;
-                        }
-                        .st2 {
-                          font-size: 180px;
-                        }
-                      </style>
-                      <g>
-                        <path
-                          class="st0"
-                          d="M1134.59,158.27c1.24,1.14,1.56,2.51,0.97,4.07c-0.56,1.48-2.01,2.44-3.59,2.44h-29.34
+                // Ritorna l'SVG con il valore calcolato
+                return html`
+                  <svg
+                    version="1.1"
+                    id="Ñëîé_1"
+                    xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink"
+                    x="0px"
+                    y="0px"
+                    viewBox="0 0 1152.78 354.73"
+                    style="enable-background:new 0 0 1152.78 354.73; height:6vh;"
+                    xml:space="preserve"
+                  >
+                    <style type="text/css">
+                      .st0 {
+                        fill: #757575;
+                      }
+                      .st1 {
+                        font-family: "bw_font";
+                        font-weight: bold;
+                      }
+                      .st2 {
+                        font-size: 180px;
+                      }
+                    </style>
+                    <g>
+                      <path
+                        class="st0"
+                        d="M1134.59,158.27c1.24,1.14,1.56,2.51,0.97,4.07c-0.56,1.48-2.01,2.44-3.59,2.44h-29.34
   c-16.57,0-30,13.43-30,30v24.55c0,4.16,3.37,7.52,7.52,7.52l0,0c4.16,0,7.52-3.37,7.52-7.52v-24.55c0-8.25,6.69-14.94,14.94-14.94
   h29.43c17.14,0,25.35-21.04,12.74-32.65L853.18,8.75c-3.6-3.31-8.16-4.96-12.73-4.96c-4.57,0-9.14,1.65-12.74,4.97L555.94,147.19
   c-12.6,11.61-4.39,32.65,12.74,32.65h33.18c8.25,0,14.94,6.69,14.94,14.94v138.86c0,8.47,8.83,15.24,17.26,15.24h69.4
   c4.16,0,7.52-3.37,7.52-7.52l0,0c0-4.16-3.37-7.52-7.52-7.52h-69.4c-0.68,0-1.7-0.52-2.21-0.99V194.78c0-16.57-13.43-30-30-30
   h-33.09c-1.59,0-3.04-0.96-3.6-2.44c-0.59-1.56-0.25-2.93,0.98-4.07L837.9,19.83c0.89-0.82,1.88-0.99,2.55-0.99
   c0.67,0,1.65,0.17,2.54,0.99"
-                        />
-                      </g>
-                      <text
-                        transform="matrix(1 0 0 1 0.1313 290.461)" 
-                        class="st0 st1 st2"
-                      >
-                        ${weatherTemperature}°
-                      </text>
-                      <text
-                        transform="matrix(1 0 0 1 660.559 290.461)"
-                        class="st0 st1 st2"
-                      >
-                        ${internalTemperatureState}°
-                      </text>
-                    </svg>
-                  `;
-                })()
-              : html`<div class="ext-temp">${weatherTemperature}°</div>`}
-          </div>
+                      />
+                    </g>
+                    <text
+                      transform="matrix(1 0 0 1 0.1313 290.461)"
+                      class="st0 st1 st2"
+                    >
+                      ${weatherTemperature}°
+                    </text>
+                    <text
+                      transform="matrix(1 0 0 1 660.559 290.461)"
+                      class="st0 st1 st2"
+                    >
+                      ${internalTemperatureState}°
+                    </text>
+                  </svg>
+                `;
+              })()
+            : html`<div class="ext-temp">${weatherTemperature}°</div>`}
+        </div>
 
-          ${shouldAlternate
-            ? html`
-                <div
-                  style="grid-area: cal-event;align-self: end;"
-                  class="${showEntityState ? "visible" : "hidden"}"
-                >
-                  ${showEntityState ? this.renderEntityState() : ""}
-                </div>
-                <div
-                  style="grid-area: cal-event;align-self: end;"
-                  class="${!showEntityState ? "visible" : "hidden"}"
-                >
-                  ${!showEntityState ? this.renderEvents() : ""}
-                </div>
-              `
-            : html`
-                ${this.config?.value_entity
-                  ? html`<div style="grid-area: cal-event;align-self: end;">
-                      ${this.renderEntityState()}
-                    </div>`
-                  : ""}
-                ${this.config?.calendars
-                  ? html`<div style="grid-area: cal-event;align-self: end;">
-                      ${this.renderEvents()}
-                    </div>`
-                  : ""}
-              `}
+        ${shouldAlternate
+          ? html`
+              <div
+                style="grid-area: cal-event;align-self: end;"
+                class="${showEntityState ? "visible" : "hidden"}"
+              >
+                ${showEntityState ? this.renderEntityState() : ""}
+              </div>
+              <div
+                style="grid-area: cal-event;align-self: end;"
+                class="${!showEntityState ? "visible" : "hidden"}"
+              >
+                ${!showEntityState ? this.renderEvents() : ""}
+              </div>
+            `
+          : html`
+              ${this.config?.value_entity
+                ? html`<div style="grid-area: cal-event;align-self: end;">
+                    ${this.renderEntityState()}
+                  </div>`
+                : ""}
+              ${this.config?.calendars
+                ? html`<div style="grid-area: cal-event;align-self: end;">
+                    ${this.renderEvents()}
+                  </div>`
+                : ""}
+            `}
 
-          <div style="grid-area: tline; margin-top: 7vh;">
-            <div class="gradient-bar"></div>
-            <div class="timeline">
-              ${limitedForecast.length > 0
-                ? limitedForecast.map((f: any, index: number) => {
-                    const showCondition = f.condition !== previousCondition;
-                    previousCondition = f.condition; // Aggiorna la condizione precedente
+        <div style="grid-area: tline; margin-top: 7vh;">
+          <div class="gradient-bar"></div>
+          <div class="timeline">
+            ${limitedForecast.length > 0
+              ? limitedForecast.map((f: any, index: number) => {
+                  const showCondition = f.condition !== previousCondition;
+                  previousCondition = f.condition; // Aggiorna la condizione precedente
 
-                    const icon =
-                    ScreensaverCard.weatherIconsDay[f.condition as keyof typeof ScreensaverCard.weatherIconsDay] || "unknown";
-                    const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
+                  const icon =
+                    ScreensaverCard.weatherIconsDay[
+                      f.condition as keyof typeof ScreensaverCard.weatherIconsDay
+                    ] || "unknown";
+                  const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
 
-                    const temperatureClass =
-                      f.temperature < 10
-                        ? "cold"
-                        : f.temperature > 25
-                          ? "hot"
-                          : "";
+                  const temperatureClass =
+                    f.temperature < 10
+                      ? "cold"
+                      : f.temperature > 25
+                      ? "hot"
+                      : "";
 
-                    return html`
-                      <div class="timeline-item">
-                        ${showCondition
-                          ? html`
-                              <div class="condition">
-                                <img src="${iconUrl}" alt="${f.condition}" />
-                              </div>
-                            `
-                          : html`<div class="condition"></div>`}
-                        <div class="details">
-                          <div class="hour">
-                            ${new Date(f.datetime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
-                          <div class="temperature ${temperatureClass}">
-                            ${f.temperature}°C
-                          </div>
-                          ${f.precipitation !== 0
-                            ? html`<div class="precipitation">
-                                ${f.precipitation} mm
-                              </div>`
-                            : ""}
+                  return html`
+                    <div class="timeline-item">
+                      ${showCondition
+                        ? html`
+                            <div class="condition">
+                              <img src="${iconUrl}" alt="${f.condition}" />
+                            </div>
+                          `
+                        : html`<div class="condition"></div>`}
+                      <div class="details">
+                        <div class="hour">
+                          ${new Date(f.datetime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </div>
+                        <div class="temperature ${temperatureClass}">
+                          ${f.temperature}°C
+                        </div>
+                        ${f.precipitation !== 0
+                          ? html`<div class="precipitation">
+                              ${f.precipitation} mm
+                            </div>`
+                          : ""}
                       </div>
-                    `;
-                  })
-                : html`<div>No hourly forecast available</div>`}
-            </div>
+                    </div>
+                  `;
+                })
+              : html`<div>No hourly forecast available</div>`}
           </div>
-
+        </div>
       </ha-card>
     `;
   }
