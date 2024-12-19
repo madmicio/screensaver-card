@@ -307,6 +307,27 @@ var styles = i$2 `
     opacity: 1;
     transition: opacity 0.5s ease-in-out;
     }
+    .number-input-container {
+    margin-bottom: 1em;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .number-input-container label {
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    }
+
+    .number-input-container input {
+    padding: 0.5em;
+    font-size: 1em;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    width: 100px;
+    }
+
+
+
 
     
 `;
@@ -467,6 +488,7 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       .select-item, .select-weather {
           height: 60px;
           border-radius: 16px;
+          width: 80%;
       }
       .select-weather {
       margin-bottom: 10px;
@@ -483,6 +505,14 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
         overflow: hidden; /* Nasconde il contenuto fuoriuscente */
       }
+      
+      .inputNumber{
+        border-radius: 7px;
+        height: 30px;
+        width: 40px;
+        text-align: center;
+      }
+
     `;
     }
     render() {
@@ -496,6 +526,26 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
           Weather Entity Selector
         </h4>
         <div class="content">${this._renderWeatherSelector()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:calendar"></ha-icon>
+          Calendar Selector
+        </h4>
+        <div class="content">
+          <div class="number-input-container">
+            <label for="number-calendar-events">Number of Events in List:</label>
+            <input class="inputNumber"
+              id="number-calendar-events"
+              type="number"
+              min="1"
+              value=${this._config.number_calendar_events || 5}
+              @change=${this._updateNumberOfEvents}
+            />
+          </div>
+          ${this._renderCalendarSelector()}
+        </div>
       </ha-expansion-panel>
 
       <ha-expansion-panel outlined>
@@ -517,9 +567,17 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       <ha-expansion-panel outlined>
         <h4 slot="header">
           <ha-icon icon="mdi:thermometer"></ha-icon>
-          Temperature Sensor Selector
+          Internal Temperature Sensor Selector
         </h4>
-        <div class="content">${this._renderSensorDropdown()}</div>
+        <div class="content">${this._renderSensorDropdowninternal()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:thermometer"></ha-icon>
+          External Temperature Sensor Selector
+        </h4>
+        <div class="content">${this._renderSensorDropdownexternal()}</div>
       </ha-expansion-panel>
 
       <ha-expansion-panel outlined>
@@ -530,6 +588,85 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         <div class="content">${this._renderLandingPageInput()}</div>
       </ha-expansion-panel>
     `;
+    }
+    _updateNumberOfEvents(event) {
+        const input = event.target;
+        const value = parseInt(input.value, 10);
+        if (value > 0) {
+            this._config = {
+                ...this._config,
+                number_calendar_events: value,
+            };
+            this._dispatchConfigUpdate();
+        }
+    }
+    _renderCalendarSelector() {
+        const calendarEntities = this._getCalendarEntities();
+        return x `
+      <div class="select-container">
+        <div class="heading">Add Calendar</div>
+        <div style="display: flex; align-items: center;">
+          <select 
+            id="calendar_select" 
+            class="select-item"
+          >
+            <option value="">-- Select a Calendar --</option>
+            ${calendarEntities.map((entityId) => x `<option value="${entityId}">${this.hass.states[entityId]?.attributes?.friendly_name || entityId}</option>`)}
+          </select>
+          <ha-icon
+            icon="mdi:plus"
+            @click=${this._addCalendar}
+          ></ha-icon>
+        </div>
+        ${this._renderCalendarList()}
+      </div>
+    `;
+    }
+    _renderCalendarList() {
+        return x `
+      <div style="margin-top: 1ch;">
+        ${(this._config.calendars || []).length > 0
+            ? x `
+              <ul>
+                ${(this._config.calendars || []).map((calendar) => x `
+                    <div class="val_sel">
+                      <span>${this.hass.states[calendar]?.attributes?.friendly_name || calendar}</span>
+                      <ha-icon
+                        icon="mdi:delete"
+                        @click=${() => this._removeCalendar(calendar)}
+                      ></ha-icon>
+                    </div>
+                  `)}
+              </ul>
+            `
+            : x `<p>No calendars selected.</p>`}
+      </div>
+    `;
+    }
+    _addCalendar() {
+        const selectElement = this.shadowRoot.getElementById("calendar_select");
+        if (selectElement && selectElement.value) {
+            const calendarId = selectElement.value;
+            if (!this._config.calendars?.includes(calendarId)) {
+                this._config = {
+                    ...this._config,
+                    calendars: [...(this._config.calendars || []), calendarId]
+                };
+                this._dispatchConfigUpdate();
+            }
+            selectElement.value = ""; // Resetta il menu
+        }
+    }
+    _removeCalendar(calendarId) {
+        const calendars = (this._config.calendars || []).filter((calendar) => calendar !== calendarId);
+        this._config = {
+            ...this._config,
+            calendars,
+        };
+        this._dispatchConfigUpdate();
+    }
+    _getCalendarEntities() {
+        return Object.keys(this.hass.states).filter((entityId) => entityId.startsWith("calendar."));
     }
     _renderWeatherSelector() {
         const weatherEntities = this._getWeatherEntities();
@@ -556,7 +693,10 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       <div class="select-container">
         <div class="heading">Add Entities to value_entity</div>
         <div style="display: flex; align-items: center;">
-          <select id="value_entity_select" class="select-item">
+          <select 
+            id="value_entity_select" 
+            class="select-item"
+          >
             <option value="">-- Select an Entity --</option>
             ${allEntities.map((entityId) => x `<option value="${entityId}">${entityId}</option>`)}
           </select>
@@ -743,7 +883,7 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         this._entityIcons = updatedIcons;
         this._updateEntityIconConfig();
     }
-    _renderSensorDropdown() {
+    _renderSensorDropdowninternal() {
         // Filtra solo i sensori con device_class="temperature"
         const temperatureSensors = Object.keys(this.hass.states).filter((entityId) => {
             const entity = this.hass.states[entityId];
@@ -751,47 +891,46 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
                 entity.attributes?.device_class === "temperature");
         });
         return x `
-      <div class="select-container" style="margin-top: 2ch;">
-        <div class="heading">Select Internal Temperature Sensor</div>
-        <div style="display: flex; align-items: center;">
-          <select id="internal_temperature_select" class="select-item">
-            <option value="" ?selected=${!this._config?.internal_temperature}>
-              -- Select a Temperature Sensor --
+  <div class="select-container" style="margin-top: 2ch;">
+    <div class="heading">Select Internal Temperature Sensor</div>
+    <div style="display: flex; align-items: center;">
+      <select
+        id="internal_temperature_select"
+        class="select-item"
+        @change=${this._setInternalTemperatureSensor}
+      >
+        <option value="" ?selected=${!this._config?.internal_temperature}>
+          -- Select a Temperature Sensor --
+        </option>
+        ${temperatureSensors.map((entityId) => x `
+            <option
+              value=${entityId}
+              ?selected=${this._config?.internal_temperature === entityId}
+            >
+              ${entityId}
             </option>
-            ${temperatureSensors.map((entityId) => x `
-                <option
-                  value=${entityId}
-                  ?selected=${this._config?.internal_temperature === entityId}
-                >
-                  ${entityId}
-                </option>
-              `)}
-          </select>
-          <ha-icon
-            icon="mdi:check"
-            style="cursor: pointer; margin-left: 1ch;"
-            @click=${this._setInternalTemperatureSensor}
-          ></ha-icon>
-        </div>
+          `)}
+      </select>
+    </div>
 
-        <!-- Visualizza l'entità selezionata con l'icona cestino -->
-        ${this._config?.internal_temperature
+    <!-- Visualizza l'entità selezionata con l'icona cestino -->
+    ${this._config?.internal_temperature
             ? x `
-              <div style="display: flex; align-items: center; margin-top: 1ch;">
-                <span style="flex: 1;">
-                  Selected:
-                  <strong>${this._config.internal_temperature}</strong>
-                </span>
-                <ha-icon
-                  icon="mdi:delete"
-                  style="cursor: pointer;"
-                  @click=${this._removeInternalTemperatureSensor}
-                ></ha-icon>
-              </div>
-            `
+          <div style="display: flex; align-items: center; margin-top: 1ch;">
+            <span style="flex: 1;">
+              Selected:
+              <strong>${this._config.internal_temperature}</strong>
+            </span>
+            <ha-icon
+              icon="mdi:delete"
+              style="cursor: pointer;"
+              @click=${this._removeInternalTemperatureSensor}
+            ></ha-icon>
+          </div>
+        `
             : ""}
-      </div>
-    `;
+  </div>
+`;
     }
     _removeInternalTemperatureSensor() {
         const { internal_temperature, ...newConfig } = this._config; // Rimuove la chiave internal_temperature
@@ -805,6 +944,73 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
             this._config = {
                 ...this._config,
                 internal_temperature: selectedValue,
+            };
+        }
+        else {
+            // Rimuove la chiave se selezione vuota
+            this._removeInternalTemperatureSensor();
+        }
+        this._dispatchConfigUpdate();
+    }
+    _renderSensorDropdownexternal() {
+        // Filtra solo i sensori con device_class="temperature"
+        const temperatureSensors = Object.keys(this.hass.states).filter((entityId) => {
+            const entity = this.hass.states[entityId];
+            return (entityId.startsWith("sensor.") &&
+                entity.attributes?.device_class === "temperature");
+        });
+        return x `
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Select External Temperature Sensor</div>
+        <div style="display: flex; align-items: center;">
+          <select id="external_temperature_select" class="select-item"
+          @change=${this._setExternalTemperatureSensor}
+          >
+            <option value="" ?selected=${!this._config?.external_temperature}>
+              -- Select a Temperature Sensor --
+            </option>
+            ${temperatureSensors.map((entityId) => x `
+                <option
+                  value=${entityId}
+                  ?selected=${this._config?.external_temperature === entityId}
+                >
+                  ${entityId}
+                </option>
+              `)}
+          </select>
+        </div>
+
+        <!-- Visualizza l'entità selezionata con l'icona cestino -->
+        ${this._config?.external_temperature
+            ? x `
+              <div style="display: flex; align-items: center; margin-top: 1ch;">
+                <span style="flex: 1;">
+                  Selected:
+                  <strong>${this._config.external_temperature}</strong>
+                </span>
+                <ha-icon
+                  icon="mdi:delete"
+                  style="cursor: pointer;"
+                  @click=${this._removeExternalTemperatureSensor}
+                ></ha-icon>
+              </div>
+            `
+            : ""}
+      </div>
+    `;
+    }
+    _removeExternalTemperatureSensor() {
+        const { external_temperature, ...newConfig } = this._config; // Rimuove la chiave external_temperature
+        this._config = newConfig;
+        this._dispatchConfigUpdate();
+    }
+    _setExternalTemperatureSensor() {
+        const selectElement = this.shadowRoot.getElementById("external_temperature_select");
+        const selectedValue = selectElement.value;
+        if (selectedValue) {
+            this._config = {
+                ...this._config,
+                external_temperature: selectedValue,
             };
         }
         else {
@@ -952,6 +1158,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
     }
     async getEvents() {
         const calendarEntities = this.config?.calendars || [];
+        const Nevents = this.config?.number_calendar_events || 5;
         if (!calendarEntities.length)
             return;
         const start = new Date();
@@ -963,7 +1170,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             this.checkCGAlert(filteredEvents);
             this.events = filteredEvents
                 .filter((event) => event.summary !== "cg_alert")
-                .slice(0, 5);
+                .slice(0, Nevents);
         }
         catch {
             this.events = [];
@@ -1174,7 +1381,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             return x ``;
         }
         const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
-        const weatherTemperature = this.hass.states[weatherEntity].attributes.temperature;
+        const weatherTemperature = this.config.external_temperature ? this.hass.states[this.config.external_temperature].state : this.hass.states[weatherEntity].attributes.temperature;
         const sunEntity = this.hass.states["sun.sun"];
         if (!sunEntity) {
             console.error("Entità sun.sun non trovata");

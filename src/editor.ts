@@ -65,6 +65,7 @@ class ScreesaverEditor extends LitElement {
       .select-item, .select-weather {
           height: 60px;
           border-radius: 16px;
+          width: 80%;
       }
       .select-weather {
       margin-bottom: 10px;
@@ -81,6 +82,14 @@ class ScreesaverEditor extends LitElement {
         height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
         overflow: hidden; /* Nasconde il contenuto fuoriuscente */
       }
+      
+      .inputNumber{
+        border-radius: 7px;
+        height: 30px;
+        width: 40px;
+        text-align: center;
+      }
+
     `;
   }
 
@@ -95,6 +104,26 @@ class ScreesaverEditor extends LitElement {
           Weather Entity Selector
         </h4>
         <div class="content">${this._renderWeatherSelector()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:calendar"></ha-icon>
+          Calendar Selector
+        </h4>
+        <div class="content">
+          <div class="number-input-container">
+            <label for="number-calendar-events">Number of Events in List:</label>
+            <input class="inputNumber"
+              id="number-calendar-events"
+              type="number"
+              min="1"
+              value=${this._config.number_calendar_events || 5}
+              @change=${this._updateNumberOfEvents}
+            />
+          </div>
+          ${this._renderCalendarSelector()}
+        </div>
       </ha-expansion-panel>
 
       <ha-expansion-panel outlined>
@@ -116,9 +145,17 @@ class ScreesaverEditor extends LitElement {
       <ha-expansion-panel outlined>
         <h4 slot="header">
           <ha-icon icon="mdi:thermometer"></ha-icon>
-          Temperature Sensor Selector
+          Internal Temperature Sensor Selector
         </h4>
-        <div class="content">${this._renderSensorDropdown()}</div>
+        <div class="content">${this._renderSensorDropdowninternal()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:thermometer"></ha-icon>
+          External Temperature Sensor Selector
+        </h4>
+        <div class="content">${this._renderSensorDropdownexternal()}</div>
       </ha-expansion-panel>
 
       <ha-expansion-panel outlined>
@@ -130,6 +167,113 @@ class ScreesaverEditor extends LitElement {
       </ha-expansion-panel>
     `;
   }
+
+  private _updateNumberOfEvents(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = parseInt(input.value, 10);
+  
+    if (value > 0) {
+      this._config = {
+        ...this._config,
+        number_calendar_events: value,
+      };
+      this._dispatchConfigUpdate();
+    }
+  }
+  
+
+  private _renderCalendarSelector() {
+    const calendarEntities = this._getCalendarEntities();
+
+    return html`
+      <div class="select-container">
+        <div class="heading">Add Calendar</div>
+        <div style="display: flex; align-items: center;">
+          <select 
+            id="calendar_select" 
+            class="select-item"
+          >
+            <option value="">-- Select a Calendar --</option>
+            ${calendarEntities.map(
+              (entityId: string) =>
+                html`<option value="${entityId}">${this.hass.states[entityId]?.attributes?.friendly_name || entityId}</option>`
+            )}
+          </select>
+          <ha-icon
+            icon="mdi:plus"
+            @click=${this._addCalendar}
+          ></ha-icon>
+        </div>
+        ${this._renderCalendarList()}
+      </div>
+    `;
+  }
+
+  private _renderCalendarList() {
+    return html`
+      <div style="margin-top: 1ch;">
+        ${(this._config.calendars || []).length > 0
+          ? html`
+              <ul>
+                ${(this._config.calendars || []).map(
+                  (calendar: string) => html`
+                    <div class="val_sel">
+                      <span>${this.hass.states[calendar]?.attributes?.friendly_name || calendar}</span>
+                      <ha-icon
+                        icon="mdi:delete"
+                        @click=${() => this._removeCalendar(calendar)}
+                      ></ha-icon>
+                    </div>
+                  `
+                )}
+              </ul>
+            `
+          : html`<p>No calendars selected.</p>`}
+      </div>
+    `;
+  }
+
+  private _addCalendar() {
+    const selectElement = this.shadowRoot!.getElementById(
+      "calendar_select"
+    ) as HTMLSelectElement;
+
+    if (selectElement && selectElement.value) {
+      const calendarId = selectElement.value;
+
+      if (!this._config.calendars?.includes(calendarId)) {
+        this._config = { 
+          ...this._config, 
+          calendars: [...(this._config.calendars || []), calendarId] 
+        };
+        this._dispatchConfigUpdate();
+      }
+
+      selectElement.value = ""; // Resetta il menu
+    }
+  }
+
+  private _removeCalendar(calendarId: string) {
+    const calendars = (this._config.calendars || []).filter(
+      (calendar: string) => calendar !== calendarId
+    );
+
+    this._config = {
+      ...this._config,
+      calendars,
+    };
+    this._dispatchConfigUpdate();
+  }
+
+  private _getCalendarEntities(): string[] {
+    return Object.keys(this.hass.states).filter((entityId: string) =>
+      entityId.startsWith("calendar.")
+    );
+  }
+
+  
+  
+  
 
   private _renderWeatherSelector() {
     const weatherEntities = this._getWeatherEntities();
@@ -162,7 +306,10 @@ class ScreesaverEditor extends LitElement {
       <div class="select-container">
         <div class="heading">Add Entities to value_entity</div>
         <div style="display: flex; align-items: center;">
-          <select id="value_entity_select" class="select-item">
+          <select 
+            id="value_entity_select" 
+            class="select-item"
+          >
             <option value="">-- Select an Entity --</option>
             ${allEntities.map(
               (entityId) =>
@@ -389,7 +536,7 @@ class ScreesaverEditor extends LitElement {
     this._updateEntityIconConfig();
   }
 
-  _renderSensorDropdown() {
+  _renderSensorDropdowninternal() {
     // Filtra solo i sensori con device_class="temperature"
     const temperatureSensors = Object.keys(this.hass.states).filter(
       (entityId) => {
@@ -402,49 +549,49 @@ class ScreesaverEditor extends LitElement {
     );
 
     return html`
-      <div class="select-container" style="margin-top: 2ch;">
-        <div class="heading">Select Internal Temperature Sensor</div>
-        <div style="display: flex; align-items: center;">
-          <select id="internal_temperature_select" class="select-item">
-            <option value="" ?selected=${!this._config?.internal_temperature}>
-              -- Select a Temperature Sensor --
+  <div class="select-container" style="margin-top: 2ch;">
+    <div class="heading">Select Internal Temperature Sensor</div>
+    <div style="display: flex; align-items: center;">
+      <select
+        id="internal_temperature_select"
+        class="select-item"
+        @change=${this._setInternalTemperatureSensor}
+      >
+        <option value="" ?selected=${!this._config?.internal_temperature}>
+          -- Select a Temperature Sensor --
+        </option>
+        ${temperatureSensors.map(
+          (entityId) => html`
+            <option
+              value=${entityId}
+              ?selected=${this._config?.internal_temperature === entityId}
+            >
+              ${entityId}
             </option>
-            ${temperatureSensors.map(
-              (entityId) => html`
-                <option
-                  value=${entityId}
-                  ?selected=${this._config?.internal_temperature === entityId}
-                >
-                  ${entityId}
-                </option>
-              `
-            )}
-          </select>
-          <ha-icon
-            icon="mdi:check"
-            style="cursor: pointer; margin-left: 1ch;"
-            @click=${this._setInternalTemperatureSensor}
-          ></ha-icon>
-        </div>
+          `
+        )}
+      </select>
+    </div>
 
-        <!-- Visualizza l'entità selezionata con l'icona cestino -->
-        ${this._config?.internal_temperature
-          ? html`
-              <div style="display: flex; align-items: center; margin-top: 1ch;">
-                <span style="flex: 1;">
-                  Selected:
-                  <strong>${this._config.internal_temperature}</strong>
-                </span>
-                <ha-icon
-                  icon="mdi:delete"
-                  style="cursor: pointer;"
-                  @click=${this._removeInternalTemperatureSensor}
-                ></ha-icon>
-              </div>
-            `
-          : ""}
-      </div>
-    `;
+    <!-- Visualizza l'entità selezionata con l'icona cestino -->
+    ${this._config?.internal_temperature
+      ? html`
+          <div style="display: flex; align-items: center; margin-top: 1ch;">
+            <span style="flex: 1;">
+              Selected:
+              <strong>${this._config.internal_temperature}</strong>
+            </span>
+            <ha-icon
+              icon="mdi:delete"
+              style="cursor: pointer;"
+              @click=${this._removeInternalTemperatureSensor}
+            ></ha-icon>
+          </div>
+        `
+      : ""}
+  </div>
+`;
+
   }
 
   _removeInternalTemperatureSensor() {
@@ -464,6 +611,87 @@ class ScreesaverEditor extends LitElement {
       this._config = {
         ...this._config,
         internal_temperature: selectedValue,
+      };
+    } else {
+      // Rimuove la chiave se selezione vuota
+      this._removeInternalTemperatureSensor();
+    }
+
+    this._dispatchConfigUpdate();
+  }
+
+  _renderSensorDropdownexternal() {
+    // Filtra solo i sensori con device_class="temperature"
+    const temperatureSensors = Object.keys(this.hass.states).filter(
+      (entityId) => {
+        const entity = this.hass.states[entityId];
+        return (
+          entityId.startsWith("sensor.") &&
+          entity.attributes?.device_class === "temperature"
+        );
+      }
+    );
+
+    return html`
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Select External Temperature Sensor</div>
+        <div style="display: flex; align-items: center;">
+          <select id="external_temperature_select" class="select-item"
+          @change=${this._setExternalTemperatureSensor}
+          >
+            <option value="" ?selected=${!this._config?.external_temperature}>
+              -- Select a Temperature Sensor --
+            </option>
+            ${temperatureSensors.map(
+              (entityId) => html`
+                <option
+                  value=${entityId}
+                  ?selected=${this._config?.external_temperature === entityId}
+                >
+                  ${entityId}
+                </option>
+              `
+            )}
+          </select>
+        </div>
+
+        <!-- Visualizza l'entità selezionata con l'icona cestino -->
+        ${this._config?.external_temperature
+          ? html`
+              <div style="display: flex; align-items: center; margin-top: 1ch;">
+                <span style="flex: 1;">
+                  Selected:
+                  <strong>${this._config.external_temperature}</strong>
+                </span>
+                <ha-icon
+                  icon="mdi:delete"
+                  style="cursor: pointer;"
+                  @click=${this._removeExternalTemperatureSensor}
+                ></ha-icon>
+              </div>
+            `
+          : ""}
+      </div>
+    `;
+  }
+
+  _removeExternalTemperatureSensor() {
+    const { external_temperature, ...newConfig } = this._config; // Rimuove la chiave external_temperature
+    this._config = newConfig;
+    this._dispatchConfigUpdate();
+  }
+
+  _setExternalTemperatureSensor() {
+    const selectElement = this.shadowRoot!.getElementById(
+      "external_temperature_select"
+    ) as HTMLSelectElement;
+
+    const selectedValue = selectElement.value;
+
+    if (selectedValue) {
+      this._config = {
+        ...this._config,
+        external_temperature: selectedValue,
       };
     } else {
       // Rimuove la chiave se selezione vuota

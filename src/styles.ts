@@ -219,6 +219,27 @@ export default css`
     opacity: 1;
     transition: opacity 0.5s ease-in-out;
     }
+    .number-input-container {
+    margin-bottom: 1em;
+    display: flex;
+    flex-direction: column;
+    }
+
+    .number-input-container label {
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    }
+
+    .number-input-container input {
+    padding: 0.5em;
+    font-size: 1em;
+    border: 1px solid var(--divider-color);
+    border-radius: 4px;
+    width: 100px;
+    }
+
+
+
 
     
 `;

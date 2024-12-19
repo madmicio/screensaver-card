@@ -132,6 +132,7 @@ export class ScreensaverCard extends LitElement {
 
   private async getEvents() {
     const calendarEntities = this.config?.calendars || [];
+    const Nevents = this.config?.number_calendar_events || 5;
     if (!calendarEntities.length) return;
 
     const start = new Date();
@@ -149,7 +150,7 @@ export class ScreensaverCard extends LitElement {
       this.checkCGAlert(filteredEvents);
       this.events = filteredEvents
         .filter((event) => event.summary !== "cg_alert")
-        .slice(0, 5);
+        .slice(0, Nevents);
     } catch {
       this.events = [];
     }
@@ -426,8 +427,7 @@ export class ScreensaverCard extends LitElement {
     }
 
     const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
-    const weatherTemperature =
-      this.hass.states[weatherEntity].attributes.temperature;
+    const weatherTemperature = this.config.external_temperature ? this.hass.states[this.config.external_temperature].state : this.hass.states[weatherEntity].attributes.temperature;
     const sunEntity = this.hass.states["sun.sun"];
     if (!sunEntity) {
       console.error("Entità sun.sun non trovata");
