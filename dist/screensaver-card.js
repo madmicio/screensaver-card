@@ -1102,7 +1102,6 @@ windowWithCards.customCards.push({
 let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
     loadLocalFont(scriptDirectory, path) {
         const style = document.createElement("style");
-        console.log(scriptDirectory);
         style.textContent = `
       @font-face {
         font-family: 'bw_font';
@@ -1209,7 +1208,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         this.cg_alert = !!alertEvent;
     }
     formatEventDate(dateInput) {
-        console.log('date input ', dateInput);
         try {
             const dateStr = typeof dateInput === "object" && "dateTime" in dateInput
                 ? dateInput.dateTime

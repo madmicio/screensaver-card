@@ -47,7 +47,6 @@ export class ScreensaverCard extends LitElement {
   private calendars: any[] = []; // Variabile per memorizzare i calendari
   private loadLocalFont(scriptDirectory: string, path: string) {
     const style = document.createElement("style");
-    console.log(scriptDirectory);
     style.textContent = `
       @font-face {
         font-family: 'bw_font';
@@ -207,7 +206,6 @@ export class ScreensaverCard extends LitElement {
   }
 
   private formatEventDate(dateInput: string | { dateTime: string }): string {
-    console.log('date input ', dateInput);
     try {
       const dateStr =
         typeof dateInput === "object" && "dateTime" in dateInput
