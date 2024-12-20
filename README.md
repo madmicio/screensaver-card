@@ -7,6 +7,17 @@ best use: fully Kiosk
 
 ![all](image/screen.png)
 
+the card was designed to be used with fully kiosks.
+Fully Kiosk offers excellent screensaver management and gives the possibility to set a UI page as a screensevar.
+
+This card must be used in panel mode.
+
+It can also be used not combined with Fully Kiosk, but you will have to provide automation for its display.
+in this case it is possible to set "landing_page:" to define the exit page from the screensaver.
+this configuration is not necessary with fully kiosk
+
+### the card has a pixel saving system
+
 ## Hacs Card Install
 
 1. add madmicio/screensaver-card as custom reposity
@@ -69,3 +80,38 @@ internal_temperature: sensor.internal_temp
 | `landing_page` |  | **Option**| url | landing page afther screensaver | 
 | `internal_temperature` |  | **Option**| sensor | internal temperature sensor|
 | `external_temperature` |  | **Option**| sensor | internal temperature sensor|
+
+  # info section
+  in this section you can configure a list of entities.
+their friendly name and status will be shown through value_entity:
+
+alternatively you can show the events of the calendars configured in calendars:
+
+if you configure both, the data will be shown alternately as shown in the video.
+
+![all](image/videogif.gif)
+
+ # icon section
+![all](image/icon.png)
+
+in this section you can configure a list of entities.
+the icon will be shown if the entity is in on or in any case in an active state
+
+ # temperature section
+![all](image/temp.png)
+
+in this section only the temperature of the weather entity contiguated in entity will be shown by default:
+
+if you configure an internal temperature sensor you will display the temperature as shown in the photo.
+
+Furthermore, it is possible to configure your own external temperature sensor which will replace that of the weather entity.
+
+# discreet alarm
+![all](image/cg_Alert.png)
+
+this is a discreet alert that can be configured anonymously. 
+
+use is very simple, just add the event to the calendar (existing or ad hoc) and the red dot will be displayed during the event.
+![all](image/cg_alert_2.png)
+
+### note: cg_alert events will never be shown in the card's calendar events list
