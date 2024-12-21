@@ -1271,42 +1271,6 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         }
     }
     firstUpdated() {
-        //   const header = document
-        //   .querySelector("body > home-assistant")?.shadowRoot
-        //   ?.querySelector("home-assistant-main")?.shadowRoot
-        //   ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
-        //   ?.querySelector("hui-root")?.shadowRoot
-        //   ?.querySelector("div > div.header");
-        // if (header) {
-        //   header.remove(); // Rimuove il div.header dal DOM
-        //   console.log("Toolbar (div.header) rimossa.");
-        // } else {
-        //   console.error("Toolbar (div.header) non trovata.");
-        // }
-        //    // Imposta il padding del div con id "view"
-        //    const viewDiv = document
-        //    .querySelector("body > home-assistant")?.shadowRoot
-        //    ?.querySelector("home-assistant-main")?.shadowRoot
-        //    ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
-        //    ?.querySelector("hui-root")?.shadowRoot
-        //    ?.querySelector("#view");
-        //  if (viewDiv) {
-        //    (viewDiv as HTMLElement).style.setProperty("padding", "0px");
-        //    console.log("Padding del div '#view' impostato a 0px.");
-        //  } else {
-        //    console.error("Div con id '#view' non trovato.");
-        //  }
-        // const haDrawer = document
-        //       .querySelector("body > home-assistant")?.shadowRoot
-        //       ?.querySelector("home-assistant-main")?.shadowRoot
-        //       ?.querySelector("ha-drawer");
-        //     if (haDrawer) {
-        //       // Imposta la variabile di stile --mdc-drawer-width a 0px
-        //       (haDrawer as HTMLElement).style.setProperty("--mdc-drawer-width", "0px");
-        //       console.log("Stile '--mdc-drawer-width' impostato a 0px.");
-        //     } else {
-        //       console.error("Elemento 'ha-drawer' non trovato.");
-        //     }
         this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
         const card = this.shadowRoot?.getElementById("dynamic-card");
         if (!card) {
