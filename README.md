@@ -108,7 +108,7 @@ if you configure an internal temperature sensor you will display the temperature
 Furthermore, it is possible to configure your own external temperature sensor which will replace that of the weather entity.
 
 # discreet alarm
-![all](image/cg_Alert.png)
+![all](image/cg_alert.png)
 
 this is a discreet alert that can be configured anonymously. 
 
