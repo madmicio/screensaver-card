@@ -119,6 +119,7 @@ use is very simple, just add the event to the calendar (existing or ad hoc) and 
 
 # hide top bar & side Bar
 ![all](image/hide.png)
+
 for users who do not use kiosk mode by default to hide the top and side bar, the Hide_bar function is implemented in the card:
 
 will automatically hide the bars when viewing the card and restore them when exiting
