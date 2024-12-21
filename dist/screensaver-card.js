@@ -587,7 +587,38 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         </h4>
         <div class="content">${this._renderLandingPageInput()}</div>
       </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:check-box-outline"></ha-icon>
+          Hide Bar Option
+        </h4>
+        <div class="content">
+          ${this._renderHideBarCheckbox()}
+        </div>
+      </ha-expansion-panel>
     `;
+    }
+    _renderHideBarCheckbox() {
+        const isHidden = this._config.hide_bar ?? false;
+        return x `
+      <div class="checkbox-container">
+        <ha-formfield label="Hide Bar">
+          <ha-checkbox
+            ?checked=${isHidden}
+            @change=${this._toggleHideBar}
+          ></ha-checkbox>
+        </ha-formfield>
+      </div>
+    `;
+    }
+    _toggleHideBar(event) {
+        const isChecked = event.target.checked;
+        this._config = {
+            ...this._config,
+            hide_bar: isChecked,
+        };
+        this._dispatchConfigUpdate();
     }
     _updateNumberOfEvents(event) {
         const input = event.target;
@@ -1126,6 +1157,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         this.events = []; // Array per salvare gli eventi
         this._isEditor = false;
         this.calendars = []; // Variabile per memorizzare i calendari
+        this.originalHeader = null;
         const scriptPath = new URL(import.meta.url).pathname;
         const scriptDirectory = scriptPath.substring(0, scriptPath.lastIndexOf("/"));
         this.loadLocalFont(scriptDirectory, scriptPath);
@@ -1239,6 +1271,42 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         }
     }
     firstUpdated() {
+        //   const header = document
+        //   .querySelector("body > home-assistant")?.shadowRoot
+        //   ?.querySelector("home-assistant-main")?.shadowRoot
+        //   ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+        //   ?.querySelector("hui-root")?.shadowRoot
+        //   ?.querySelector("div > div.header");
+        // if (header) {
+        //   header.remove(); // Rimuove il div.header dal DOM
+        //   console.log("Toolbar (div.header) rimossa.");
+        // } else {
+        //   console.error("Toolbar (div.header) non trovata.");
+        // }
+        //    // Imposta il padding del div con id "view"
+        //    const viewDiv = document
+        //    .querySelector("body > home-assistant")?.shadowRoot
+        //    ?.querySelector("home-assistant-main")?.shadowRoot
+        //    ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+        //    ?.querySelector("hui-root")?.shadowRoot
+        //    ?.querySelector("#view");
+        //  if (viewDiv) {
+        //    (viewDiv as HTMLElement).style.setProperty("padding", "0px");
+        //    console.log("Padding del div '#view' impostato a 0px.");
+        //  } else {
+        //    console.error("Div con id '#view' non trovato.");
+        //  }
+        // const haDrawer = document
+        //       .querySelector("body > home-assistant")?.shadowRoot
+        //       ?.querySelector("home-assistant-main")?.shadowRoot
+        //       ?.querySelector("ha-drawer");
+        //     if (haDrawer) {
+        //       // Imposta la variabile di stile --mdc-drawer-width a 0px
+        //       (haDrawer as HTMLElement).style.setProperty("--mdc-drawer-width", "0px");
+        //       console.log("Stile '--mdc-drawer-width' impostato a 0px.");
+        //     } else {
+        //       console.error("Elemento 'ha-drawer' non trovato.");
+        //     }
         this._isEditor = this._isInEditor(); // Verifica solo al primo aggiornamento
         const card = this.shadowRoot?.getElementById("dynamic-card");
         if (!card) {
@@ -1300,10 +1368,94 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         this.subscribeToHourlyForecast();
         this.getCalendars(); // Ottieni l'elenco dei calendari
         this.getEvents(); // Richiama la funzione per recuperare gli eventi
+        if (this.config?.hide_bar) {
+            this.activateKioskMode();
+        }
     }
     disconnectedCallback() {
         super.disconnectedCallback();
         this.unsubscribeHourlyForecast();
+        if (this.config?.hide_bar) {
+            this.restoreOriginalState();
+        }
+    }
+    activateKioskMode() {
+        // Imposta il padding del div con id "view"
+        const viewDiv = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+            ?.querySelector("hui-root")?.shadowRoot
+            ?.querySelector("#view");
+        if (viewDiv) {
+            viewDiv.style.setProperty("padding", "0px");
+            console.log("Padding del div '#view' impostato a 0px.");
+        }
+        else {
+            console.error("Div con id '#view' non trovato.");
+        }
+        // Imposta la larghezza del drawer
+        const haDrawer = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer");
+        if (haDrawer) {
+            haDrawer.style.setProperty("--mdc-drawer-width", "0px");
+            console.log("Stile '--mdc-drawer-width' impostato a 0px.");
+        }
+        else {
+            console.error("Elemento 'ha-drawer' non trovato.");
+        }
+        // Imposta lo stile display:none per il div.header
+        const headerDiv = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+            ?.querySelector("hui-root")?.shadowRoot
+            ?.querySelector("div > div.header");
+        if (headerDiv) {
+            headerDiv.style.setProperty("display", "none");
+            console.log("Stile 'display: none' applicato a 'div.header'.");
+        }
+        else {
+            console.error("Elemento 'div.header' non trovato.");
+        }
+    }
+    restoreOriginalState() {
+        // Ripristina il padding del div con id "view"
+        const viewDiv = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+            ?.querySelector("hui-root")?.shadowRoot
+            ?.querySelector("#view");
+        if (viewDiv) {
+            viewDiv.style.setProperty("padding", "calc(var(--header-height) + env(safe-area-inset-top))");
+            console.log("Padding del div '#view' ripristinato.");
+        }
+        // Ripristina la larghezza del drawer
+        const haDrawer = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer");
+        if (haDrawer) {
+            haDrawer.style.setProperty("--mdc-drawer-width", "calc(256px + env(safe-area-inset-left))");
+            console.log("Stile '--mdc-drawer-width' ripristinato.");
+        }
+        // Ripristina lo stile display del div.header
+        const headerDiv = document
+            .querySelector("body > home-assistant")?.shadowRoot
+            ?.querySelector("home-assistant-main")?.shadowRoot
+            ?.querySelector("ha-drawer > partial-panel-resolver > ha-panel-lovelace")?.shadowRoot
+            ?.querySelector("hui-root")?.shadowRoot
+            ?.querySelector("div > div.header");
+        if (headerDiv) {
+            headerDiv.style.removeProperty("display");
+            console.log("Stile 'display' ripristinato per 'div.header'.");
+        }
+        else {
+            console.error("Elemento 'div.header' non trovato per il ripristino.");
+        }
     }
     renderEntityState() {
         if (!this.config?.value_entity)

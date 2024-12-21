@@ -165,7 +165,43 @@ class ScreesaverEditor extends LitElement {
         </h4>
         <div class="content">${this._renderLandingPageInput()}</div>
       </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
+          <ha-icon icon="mdi:check-box-outline"></ha-icon>
+          Hide Bar Option
+        </h4>
+        <div class="content">
+          ${this._renderHideBarCheckbox()}
+        </div>
+      </ha-expansion-panel>
     `;
+  }
+
+  private _renderHideBarCheckbox() {
+    const isHidden = this._config.hide_bar ?? false;
+  
+    return html`
+      <div class="checkbox-container">
+        <ha-formfield label="Hide Bar">
+          <ha-checkbox
+            ?checked=${isHidden}
+            @change=${this._toggleHideBar}
+          ></ha-checkbox>
+        </ha-formfield>
+      </div>
+    `;
+  }
+
+  private _toggleHideBar(event: Event) {
+    const isChecked = (event.target as HTMLInputElement).checked;
+  
+    this._config = {
+      ...this._config,
+      hide_bar: isChecked,
+    };
+  
+    this._dispatchConfigUpdate();
   }
 
   private _updateNumberOfEvents(event: Event) {
