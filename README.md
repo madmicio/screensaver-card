@@ -113,6 +113,7 @@ Furthermore, it is possible to configure your own external temperature sensor wh
 this is a discreet alert that can be configured anonymously. 
 
 use is very simple, just add the event to the calendar (existing or ad hoc) and the red dot will be displayed during the event.
+
 ![all](image/cg_alert_2.png)
 
 ### note: cg_alert events will never be shown in the card's calendar events list
