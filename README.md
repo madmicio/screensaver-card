@@ -49,7 +49,7 @@ resources:
 
 
   # Config Editor
-  ![all](image/editor.png)
+  ![all](image/editor2.png)
   # lovelace manual config example: 
 ```yaml
 type: custom:screensaver-card
@@ -80,6 +80,7 @@ internal_temperature: sensor.internal_temp
 | `landing_page` |  | **Option**| url | landing page afther screensaver | 
 | `internal_temperature` |  | **Option**| sensor | internal temperature sensor|
 | `external_temperature` |  | **Option**| sensor | internal temperature sensor|
+| `hide_bar` |  | **Option**| boolean | hide top & side bar|
 
   # info section
   in this section you can configure a list of entities.
@@ -115,3 +116,9 @@ use is very simple, just add the event to the calendar (existing or ad hoc) and 
 ![all](image/cg_alert_2.png)
 
 ### note: cg_alert events will never be shown in the card's calendar events list
+
+# hide top bar & side Bar
+![all](image/hide.png)
+for users who do not use kiosk mode by default to hide the top and side bar, the Hide_bar function is implemented in the card:
+
+will automatically hide the bars when viewing the card and restore them when exiting
