@@ -1511,6 +1511,8 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             return x ``;
         }
         const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
+        const unifOfMesurament = this.hass.states[weatherEntity].attributes.temperature_unit;
+        const rainUnit = this.hass.states[weatherEntity].attributes.precipitation_unit;
         const weatherTemperature = this.config.external_temperature
             ? this.hass.states[this.config.external_temperature].state
             : this.hass.states[weatherEntity].attributes.temperature;
@@ -1712,10 +1714,18 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                 previousCondition = f.condition; // Aggiorna la condizione precedente
                 const icon = ScreensaverCard_1.weatherIconsDay[f.condition] || "unknown";
                 const iconUrl = `https://raw.githubusercontent.com/madmicio/screensaver-card/main/icons/${icon}.svg`;
-                const temperatureClass = f.temperature < 10
-                    ? "cold"
-                    : f.temperature > 25
-                        ? "hot"
+                const temperatureClass = unifOfMesurament === "°C"
+                    ? f.temperature < 10
+                        ? "cold"
+                        : f.temperature > 25
+                            ? "hot"
+                            : ""
+                    : unifOfMesurament === "°F"
+                        ? f.temperature < 50
+                            ? "cold"
+                            : f.temperature > 77
+                                ? "hot"
+                                : ""
                         : "";
                 return x `
                     <div class="timeline-item">
@@ -1734,11 +1744,11 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
                 })}
                         </div>
                         <div class="temperature ${temperatureClass}">
-                          ${f.temperature}°C
+                          ${f.temperature}${unifOfMesurament}
                         </div>
                         ${f.precipitation !== 0
                     ? x `<div class="precipitation">
-                              ${f.precipitation} mm
+                              ${f.precipitation} ${rainUnit}
                             </div>`
                     : ""}
                       </div>
