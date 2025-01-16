@@ -30,9 +30,9 @@ const windowWithCards = window as unknown as WindowWithCards;
 windowWithCards.customCards = windowWithCards.customCards || [];
 windowWithCards.customCards.push({
   type: CARD_TAG_NAME,
-  name: "Areas Button Card",
+  name: "Screensaver",
   preview: true,
-  description: "Areas Button Card",
+  description: "screensaver editor",
 });
 
 @customElement("screensaver-card")
