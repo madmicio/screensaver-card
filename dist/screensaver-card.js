@@ -1548,8 +1548,7 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
             nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night";
         }
         else if (this.config.rain_sensor &&
-            this.hass.states[this.config.rain_sensor]?.state === "raining" &&
-            weatherState === "rainy") {
+            this.hass.states[this.config.rain_sensor]?.state === "raining") {
             nowWeatherIcon = "raining";
         }
         else {
