@@ -575,8 +575,6 @@ export class ScreensaverCard extends LitElement {
     } else {
       nowWeatherIcon = weatherState;
     }
-    console.log("Now Weather Icon:", nowWeatherIcon);
-    console.log("eneity:", this.config.rain_sensor);
 
     const shouldAlternate = this.config?.value_entity && this.config?.calendars;
     const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
