@@ -559,11 +559,19 @@ export class ScreensaverCard extends LitElement {
 
     // Determina l'icona del meteo
     let nowWeatherIcon;
+
     if (weatherState === "partlycloudy") {
-      nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night"; // Usa isday per determinare l'icona
+      nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night";
+    } else if (
+      this.config.rayn_sensor &&
+      states[this.config.rayn_sensor]?.state === "raining" &&
+      weatherState === "rainy"
+    ) {
+      nowWeatherIcon = "raining";
     } else {
-      nowWeatherIcon = weatherState; // Per tutti gli altri stati
+      nowWeatherIcon = weatherState;
     }
+
 
     const shouldAlternate = this.config?.value_entity && this.config?.calendars;
     const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
