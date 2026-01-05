@@ -49,7 +49,7 @@ resources:
 
 
   # Config Editor
-  ![all](image/editor2.png)
+  ![all](image/editor4.png)
   # lovelace manual config example: 
 ```yaml
 type: custom:screensaver-card
@@ -80,6 +80,7 @@ internal_temperature: sensor.internal_temp
 | `landing_page` |  | **Option**| url | landing page afther screensaver | 
 | `internal_temperature` |  | **Option**| sensor | internal temperature sensor|
 | `external_temperature` |  | **Option**| sensor | internal temperature sensor|
+| `local rain sensor` |  | **Option**| sensor | local rain sensor|
 | `hide_bar` |  | **Option**| boolean | hide top & side bar|
 
   # info section

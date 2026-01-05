@@ -582,6 +582,14 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
 
       <ha-expansion-panel outlined>
         <h4 slot="header">
+          <ha-icon icon="mdi:weather-pouring"></ha-icon>
+          Local Rain Sensor Selector
+        </h4>
+        <div class="content">${this._renderSensorDropdownLocalRain()}</div>
+      </ha-expansion-panel>
+
+      <ha-expansion-panel outlined>
+        <h4 slot="header">
           <ha-icon icon="mdi:link"></ha-icon>
           Landing Page Input
         </h4>
@@ -915,139 +923,149 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         this._updateEntityIconConfig();
     }
     _renderSensorDropdowninternal() {
-        // Filtra solo i sensori con device_class="temperature"
-        const temperatureSensors = Object.keys(this.hass.states).filter((entityId) => {
-            const entity = this.hass.states[entityId];
-            return (entityId.startsWith("sensor.") &&
-                entity.attributes?.device_class === "temperature");
-        });
+        const schema = [
+            {
+                name: "internal_temperature",
+                label: "", // <-- così non mostra "internal_temperature"
+                selector: {
+                    entity: { domain: "sensor" },
+                },
+            },
+        ];
+        const data = {
+            internal_temperature: this._config?.internal_temperature ?? "",
+        };
         return x `
-  <div class="select-container" style="margin-top: 2ch;">
-    <div class="heading">Select Internal Temperature Sensor</div>
-    <div style="display: flex; align-items: center;">
-      <select
-        id="internal_temperature_select"
-        class="select-item"
-        @change=${this._setInternalTemperatureSensor}
-      >
-        <option value="" ?selected=${!this._config?.internal_temperature}>
-          -- Select a Temperature Sensor --
-        </option>
-        ${temperatureSensors.map((entityId) => x `
-            <option
-              value=${entityId}
-              ?selected=${this._config?.internal_temperature === entityId}
-            >
-              ${entityId}
-            </option>
-          `)}
-      </select>
-    </div>
+    <div class="select-container" style="margin-top: 2ch;">
+      <div class="heading">Select Internal Temperature Sensor</div>
 
-    <!-- Visualizza l'entità selezionata con l'icona cestino -->
-    ${this._config?.internal_temperature
-            ? x `
-          <div style="display: flex; align-items: center; margin-top: 1ch;">
-            <span style="flex: 1;">
-              Selected:
-              <strong>${this._config.internal_temperature}</strong>
-            </span>
-            <ha-icon
-              icon="mdi:delete"
-              style="cursor: pointer;"
-              @click=${this._removeInternalTemperatureSensor}
-            ></ha-icon>
-          </div>
-        `
-            : ""}
-  </div>
-`;
+      <ha-form
+        .hass=${this.hass}
+        .data=${data}
+        .schema=${schema}
+        .computeLabel=${(s) => s.label ?? ""} 
+        @value-changed=${this._onInternalTemperatureChanged}
+      ></ha-form>
+
+    </div>
+  `;
     }
-    _removeInternalTemperatureSensor() {
-        const { internal_temperature, ...newConfig } = this._config; // Rimuove la chiave internal_temperature
-        this._config = newConfig;
-        this._dispatchConfigUpdate();
-    }
-    _setInternalTemperatureSensor() {
-        const selectElement = this.shadowRoot.getElementById("internal_temperature_select");
-        const selectedValue = selectElement.value;
-        if (selectedValue) {
+    _onInternalTemperatureChanged(ev) {
+        const value = ev.detail.value?.internal_temperature;
+        if (value) {
+            // (opzionale ma consigliato) accetta solo sensori temperature veri
+            const ent = this.hass.states[value];
+            const isTemp = ent?.attributes?.device_class === "temperature";
+            if (!isTemp) {
+                this._removeInternalTemperatureSensor();
+                return;
+            }
             this._config = {
                 ...this._config,
-                internal_temperature: selectedValue,
+                internal_temperature: value,
             };
         }
         else {
-            // Rimuove la chiave se selezione vuota
             this._removeInternalTemperatureSensor();
         }
+        this._dispatchConfigUpdate();
+    }
+    _removeInternalTemperatureSensor() {
+        const { internal_temperature, ...newConfig } = this._config;
+        this._config = newConfig;
         this._dispatchConfigUpdate();
     }
     _renderSensorDropdownexternal() {
-        // Filtra solo i sensori con device_class="temperature"
-        const temperatureSensors = Object.keys(this.hass.states).filter((entityId) => {
-            const entity = this.hass.states[entityId];
-            return (entityId.startsWith("sensor.") &&
-                entity.attributes?.device_class === "temperature");
-        });
+        const schema = [
+            {
+                name: "external_temperature",
+                label: "",
+                selector: { entity: { domain: "sensor" } },
+            },
+        ];
+        const data = {
+            external_temperature: this._config?.external_temperature ?? "",
+        };
         return x `
-      <div class="select-container" style="margin-top: 2ch;">
-        <div class="heading">Select External Temperature Sensor</div>
-        <div style="display: flex; align-items: center;">
-          <select id="external_temperature_select" class="select-item"
-          @change=${this._setExternalTemperatureSensor}
-          >
-            <option value="" ?selected=${!this._config?.external_temperature}>
-              -- Select a Temperature Sensor --
-            </option>
-            ${temperatureSensors.map((entityId) => x `
-                <option
-                  value=${entityId}
-                  ?selected=${this._config?.external_temperature === entityId}
-                >
-                  ${entityId}
-                </option>
-              `)}
-          </select>
-        </div>
+    <div class="select-container" style="margin-top: 2ch;">
+      <div class="heading">Select External Temperature Sensor</div>
 
-        <!-- Visualizza l'entità selezionata con l'icona cestino -->
-        ${this._config?.external_temperature
-            ? x `
-              <div style="display: flex; align-items: center; margin-top: 1ch;">
-                <span style="flex: 1;">
-                  Selected:
-                  <strong>${this._config.external_temperature}</strong>
-                </span>
-                <ha-icon
-                  icon="mdi:delete"
-                  style="cursor: pointer;"
-                  @click=${this._removeExternalTemperatureSensor}
-                ></ha-icon>
-              </div>
-            `
-            : ""}
-      </div>
-    `;
+      <ha-form
+        .hass=${this.hass}
+        .data=${data}
+        .schema=${schema}
+        .computeLabel=${(s) => s.label ?? ""}  // <— NON usare fallback al name
+        @value-changed=${this._onExternalTemperatureChanged}
+      ></ha-form>
+    </div>
+  `;
     }
-    _removeExternalTemperatureSensor() {
-        const { external_temperature, ...newConfig } = this._config; // Rimuove la chiave external_temperature
-        this._config = newConfig;
-        this._dispatchConfigUpdate();
-    }
-    _setExternalTemperatureSensor() {
-        const selectElement = this.shadowRoot.getElementById("external_temperature_select");
-        const selectedValue = selectElement.value;
-        if (selectedValue) {
+    _onExternalTemperatureChanged(ev) {
+        const value = ev.detail.value?.external_temperature;
+        if (value) {
+            // (opzionale) Validazione: accetta solo device_class temperature
+            const ent = this.hass.states[value];
+            const isTemp = ent?.attributes?.device_class === "temperature";
+            if (!isTemp) {
+                // se scegli un sensore non-temperature, lo scartiamo
+                this._removeExternalTemperatureSensor();
+                return;
+            }
             this._config = {
                 ...this._config,
-                external_temperature: selectedValue,
+                external_temperature: value,
             };
         }
         else {
-            // Rimuove la chiave se selezione vuota
-            this._removeInternalTemperatureSensor();
+            this._removeExternalTemperatureSensor();
         }
+        this._dispatchConfigUpdate();
+    }
+    _removeExternalTemperatureSensor() {
+        const { external_temperature, ...newConfig } = this._config;
+        this._config = newConfig;
+        this._dispatchConfigUpdate();
+    }
+    _renderSensorDropdownLocalRain() {
+        const schema = [
+            {
+                name: "rain_sensor",
+                label: "",
+                selector: { entity: { domain: "sensor" } },
+            },
+        ];
+        const data = {
+            rain_sensor: this._config?.rain_sensor ?? "",
+        };
+        return x `
+    <div class="select-container" style="margin-top: 2ch;">
+      <div class="heading">Select Local Rain Sensor</div>
+
+      <ha-form
+        .hass=${this.hass}
+        .data=${data}
+        .schema=${schema}
+        .computeLabel=${(s) => s.label ?? ""}  // <— NON usare fallback al name
+        @value-changed=${this._onRainSensorChanged}
+      ></ha-form>
+
+      
+    </div>
+  `;
+    }
+    _onRainSensorChanged(ev) {
+        const value = ev.detail.value?.rain_sensor;
+        if (value) {
+            this._config = { ...this._config, rain_sensor: value };
+        }
+        else {
+            this._removeLocalRainSensor();
+        }
+        this._dispatchConfigUpdate();
+    }
+    _removeLocalRainSensor() {
+        const { rain_sensor, ...newConfig } = this._config; // Rimuove la chiave rain_sensor
+        this._config = newConfig;
         this._dispatchConfigUpdate();
     }
     _renderLandingPageInput() {
@@ -1126,9 +1144,9 @@ const windowWithCards = window;
 windowWithCards.customCards = windowWithCards.customCards || [];
 windowWithCards.customCards.push({
     type: CARD_TAG_NAME,
-    name: "Areas Button Card",
+    name: "Screensaver",
     preview: true,
-    description: "Areas Button Card",
+    description: "screensaver editor",
 });
 let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
     loadLocalFont(scriptDirectory, path) {
@@ -1513,9 +1531,10 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
         const unifOfMesurament = this.hass.states[weatherEntity].attributes.temperature_unit;
         const rainUnit = this.hass.states[weatherEntity].attributes.precipitation_unit;
-        const weatherTemperature = this.config.external_temperature
+        const weatherTemperature = Number(this.config.external_temperature &&
+            this.hass.states[this.config.external_temperature]
             ? this.hass.states[this.config.external_temperature].state
-            : this.hass.states[weatherEntity].attributes.temperature;
+            : this.hass.states[weatherEntity]?.attributes?.temperature).toFixed(1);
         const sunEntity = this.hass.states["sun.sun"];
         if (!sunEntity) {
             console.error("Entità sun.sun non trovata");
@@ -1526,11 +1545,18 @@ let ScreensaverCard = ScreensaverCard_1 = class ScreensaverCard extends s {
         // Determina l'icona del meteo
         let nowWeatherIcon;
         if (weatherState === "partlycloudy") {
-            nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night"; // Usa isday per determinare l'icona
+            nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night";
+        }
+        else if (this.config.rain_sensor &&
+            this.hass.states[this.config.rain_sensor]?.state === "raining" &&
+            weatherState === "rainy") {
+            nowWeatherIcon = "raining";
         }
         else {
-            nowWeatherIcon = weatherState; // Per tutti gli altri stati
+            nowWeatherIcon = weatherState;
         }
+        console.log("Now Weather Icon:", nowWeatherIcon);
+        console.log("eneity:", this.config.rain_sensor);
         const shouldAlternate = this.config?.value_entity && this.config?.calendars;
         const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
         return x `

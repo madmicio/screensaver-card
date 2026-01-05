@@ -545,9 +545,13 @@ export class ScreensaverCard extends LitElement {
     const weatherState = this.hass.states[weatherEntity].state; // Stato attuale del meteo
     const unifOfMesurament = this.hass.states[weatherEntity].attributes.temperature_unit;
     const rainUnit = this.hass.states[weatherEntity].attributes.precipitation_unit;
-    const weatherTemperature = this.config.external_temperature
-      ? this.hass.states[this.config.external_temperature].state
-      : this.hass.states[weatherEntity].attributes.temperature;
+    const weatherTemperature = Number(
+      this.config.external_temperature &&
+      this.hass.states[this.config.external_temperature]
+        ? this.hass.states[this.config.external_temperature].state
+        : this.hass.states[weatherEntity]?.attributes?.temperature
+    ).toFixed(1);
+
     const sunEntity = this.hass.states["sun.sun"];
     if (!sunEntity) {
       console.error("Entità sun.sun non trovata");
@@ -571,7 +575,8 @@ export class ScreensaverCard extends LitElement {
     } else {
       nowWeatherIcon = weatherState;
     }
-
+    console.log("Now Weather Icon:", nowWeatherIcon);
+    console.log("eneity:", this.config.rain_sensor);
 
     const shouldAlternate = this.config?.value_entity && this.config?.calendars;
     const showEntityState = Math.floor((Date.now() / 7000) % 2) === 0;
