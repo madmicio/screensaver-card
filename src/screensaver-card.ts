@@ -563,8 +563,8 @@ export class ScreensaverCard extends LitElement {
     if (weatherState === "partlycloudy") {
       nowWeatherIcon = isday ? "partlycloudy" : "partlycloudy-night";
     } else if (
-      this.config.rayn_sensor &&
-      states[this.config.rayn_sensor]?.state === "raining" &&
+      this.config.rain_sensor &&
+      this.hass.states[this.config.rain_sensor]?.state === "raining" &&
       weatherState === "rainy"
     ) {
       nowWeatherIcon = "raining";
