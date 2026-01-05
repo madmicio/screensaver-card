@@ -1,6 +1,9 @@
 # lovelace Screensaver Card
 ### Custom scrrensaver card
 best use: fully Kiosk
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
+[![buymeacoffee_badge](https://img.shields.io/badge/Donate-buymeacoffe-ff813f?style=flat)](https://www.buymeacoffee.com/madmicio)
 <hr>
 
 
@@ -131,3 +134,5 @@ use is very simple, just add the event to the calendar (existing or ad hoc) and 
 for users who do not use kiosk mode by default to hide the top and side bar, the Hide_bar function is implemented in the card:
 
 will automatically hide the bars when viewing the card and restore them when exiting
+
+<a href="https://www.buymeacoffee.com/madmicio" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" style="height: 51px !important;width: 217px !important;" ></a>

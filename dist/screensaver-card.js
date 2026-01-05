@@ -451,19 +451,19 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         font-weight: bold;
         margin-bottom: 1ch;
       }
-  
+
       .select-container {
         display: flex;
         flex-direction: column;
         margin-top: 1ch;
         width: 100%;
       }
-  
+
       ul {
         padding: 0;
         list-style: none;
       }
-  
+
       li {
         display: flex;
         flex-direction: column;
@@ -471,48 +471,50 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       }
 
       .val_sel {
-       display: flex;
+        display: flex;
         // flex-direction: column;
         margin-bottom: 1.5ch;
       }
-  
+
       ha-icon-picker {
         margin-top: 0.5ch;
       }
-  
+
       ha-icon {
         cursor: pointer;
         margin-left: auto;
       }
 
-      .select-item, .select-weather {
-          height: 60px;
-          border-radius: 16px;
-          width: 80%;
+      .select-item,
+      .select-weather {
+        height: 60px;
+        border-radius: 16px;
+        width: 80%;
       }
       .select-weather {
-      margin-bottom: 10px;
+        margin-bottom: 10px;
       }
 
       ha-expansion-panel {
-      margin-bottom: 10px;
+        margin-bottom: 10px;
       }
 
       ha-dialog .content .element-preview > * {
         transform: scale(0.5); /* Riduce il contenuto del 50% */
         transform-origin: top left; /* Punto di partenza della trasformazione */
-        width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
+        width: calc(
+          100% / 0.5
+        ); /* Corregge la larghezza per evitare overflow */
         height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
         overflow: hidden; /* Nasconde il contenuto fuoriuscente */
       }
-      
-      .inputNumber{
+
+      .inputNumber {
         border-radius: 7px;
         height: 30px;
         width: 40px;
         text-align: center;
       }
-
     `;
     }
     render() {
@@ -535,8 +537,11 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
         </h4>
         <div class="content">
           <div class="number-input-container">
-            <label for="number-calendar-events">Number of Events in List:</label>
-            <input class="inputNumber"
+            <label for="number-calendar-events"
+              >Number of Events in List:</label
+            >
+            <input
+              class="inputNumber"
               id="number-calendar-events"
               type="number"
               min="1"
@@ -601,10 +606,40 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
           <ha-icon icon="mdi:check-box-outline"></ha-icon>
           Hide Bar Option
         </h4>
-        <div class="content">
-          ${this._renderHideBarCheckbox()}
-        </div>
+        <div class="content">${this._renderHideBarCheckbox()}</div>
       </ha-expansion-panel>
+
+      <div class="donations" style="display: flex">
+        <a href="https://www.buymeacoffee.com/madmicio" target="_blank"
+          ><img
+            src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+            alt="Buy Me A Coffee"
+            style="height: 60px !important;width: 217px !important;"
+        /></a>
+        <form
+          action="https://www.paypal.com/donate"
+          method="post"
+          target="_top"
+        >
+          <input type="hidden" name="hosted_button_id" value="U5VQ9LHM82B7Q" />
+          <input
+            type="image"
+            src="https://pics.paypal.com/00/s/ODdjZjVlZjAtOWVmYS00NjQyLTkyZTUtNWQ3MmMzMmIxYTcx/file.PNG"
+            border="0"
+            name="submit"
+            title="PayPal - The safer, easier way to pay online!"
+            alt="Donate with PayPal button"
+            style="height:60px;"
+          />
+          <img
+            alt=""
+            border="0"
+            src="https://www.paypal.com/en_IT/i/scr/pixel.gif"
+            width="1"
+            height="1"
+          />
+        </form>
+      </div>
     `;
     }
     _renderHideBarCheckbox() {
@@ -645,17 +680,14 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       <div class="select-container">
         <div class="heading">Add Calendar</div>
         <div style="display: flex; align-items: center;">
-          <select 
-            id="calendar_select" 
-            class="select-item"
-          >
+          <select id="calendar_select" class="select-item">
             <option value="">-- Select a Calendar --</option>
-            ${calendarEntities.map((entityId) => x `<option value="${entityId}">${this.hass.states[entityId]?.attributes?.friendly_name || entityId}</option>`)}
+            ${calendarEntities.map((entityId) => x `<option value="${entityId}">
+                  ${this.hass.states[entityId]?.attributes?.friendly_name ||
+            entityId}
+                </option>`)}
           </select>
-          <ha-icon
-            icon="mdi:plus"
-            @click=${this._addCalendar}
-          ></ha-icon>
+          <ha-icon icon="mdi:plus" @click=${this._addCalendar}></ha-icon>
         </div>
         ${this._renderCalendarList()}
       </div>
@@ -669,7 +701,10 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
               <ul>
                 ${(this._config.calendars || []).map((calendar) => x `
                     <div class="val_sel">
-                      <span>${this.hass.states[calendar]?.attributes?.friendly_name || calendar}</span>
+                      <span
+                        >${this.hass.states[calendar]?.attributes
+                ?.friendly_name || calendar}</span
+                      >
                       <ha-icon
                         icon="mdi:delete"
                         @click=${() => this._removeCalendar(calendar)}
@@ -689,7 +724,7 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
             if (!this._config.calendars?.includes(calendarId)) {
                 this._config = {
                     ...this._config,
-                    calendars: [...(this._config.calendars || []), calendarId]
+                    calendars: [...(this._config.calendars || []), calendarId],
                 };
                 this._dispatchConfigUpdate();
             }
@@ -732,10 +767,7 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
       <div class="select-container">
         <div class="heading">Add Entities to value_entity</div>
         <div style="display: flex; align-items: center;">
-          <select 
-            id="value_entity_select" 
-            class="select-item"
-          >
+          <select id="value_entity_select" class="select-item">
             <option value="">-- Select an Entity --</option>
             ${allEntities.map((entityId) => x `<option value="${entityId}">${entityId}</option>`)}
           </select>
@@ -936,19 +968,18 @@ let ScreesaverEditor = class ScreesaverEditor extends s {
             internal_temperature: this._config?.internal_temperature ?? "",
         };
         return x `
-    <div class="select-container" style="margin-top: 2ch;">
-      <div class="heading">Select Internal Temperature Sensor</div>
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Select Internal Temperature Sensor</div>
 
-      <ha-form
-        .hass=${this.hass}
-        .data=${data}
-        .schema=${schema}
-        .computeLabel=${(s) => s.label ?? ""} 
-        @value-changed=${this._onInternalTemperatureChanged}
-      ></ha-form>
-
-    </div>
-  `;
+        <ha-form
+          .hass=${this.hass}
+          .data=${data}
+          .schema=${schema}
+          .computeLabel=${(s) => s.label ?? ""}
+          @value-changed=${this._onInternalTemperatureChanged}
+        ></ha-form>
+      </div>
+    `;
     }
     _onInternalTemperatureChanged(ev) {
         const value = ev.detail.value?.internal_temperature;

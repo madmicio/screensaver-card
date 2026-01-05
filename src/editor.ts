@@ -28,19 +28,19 @@ class ScreesaverEditor extends LitElement {
         font-weight: bold;
         margin-bottom: 1ch;
       }
-  
+
       .select-container {
         display: flex;
         flex-direction: column;
         margin-top: 1ch;
         width: 100%;
       }
-  
+
       ul {
         padding: 0;
         list-style: none;
       }
-  
+
       li {
         display: flex;
         flex-direction: column;
@@ -48,48 +48,50 @@ class ScreesaverEditor extends LitElement {
       }
 
       .val_sel {
-       display: flex;
+        display: flex;
         // flex-direction: column;
         margin-bottom: 1.5ch;
       }
-  
+
       ha-icon-picker {
         margin-top: 0.5ch;
       }
-  
+
       ha-icon {
         cursor: pointer;
         margin-left: auto;
       }
 
-      .select-item, .select-weather {
-          height: 60px;
-          border-radius: 16px;
-          width: 80%;
+      .select-item,
+      .select-weather {
+        height: 60px;
+        border-radius: 16px;
+        width: 80%;
       }
       .select-weather {
-      margin-bottom: 10px;
+        margin-bottom: 10px;
       }
 
       ha-expansion-panel {
-      margin-bottom: 10px;
+        margin-bottom: 10px;
       }
 
       ha-dialog .content .element-preview > * {
         transform: scale(0.5); /* Riduce il contenuto del 50% */
         transform-origin: top left; /* Punto di partenza della trasformazione */
-        width: calc(100% / 0.5); /* Corregge la larghezza per evitare overflow */
+        width: calc(
+          100% / 0.5
+        ); /* Corregge la larghezza per evitare overflow */
         height: calc(100% / 0.5); /* Corregge l'altezza per evitare overflow */
         overflow: hidden; /* Nasconde il contenuto fuoriuscente */
       }
-      
-      .inputNumber{
+
+      .inputNumber {
         border-radius: 7px;
         height: 30px;
         width: 40px;
         text-align: center;
       }
-
     `;
   }
 
@@ -113,8 +115,11 @@ class ScreesaverEditor extends LitElement {
         </h4>
         <div class="content">
           <div class="number-input-container">
-            <label for="number-calendar-events">Number of Events in List:</label>
-            <input class="inputNumber"
+            <label for="number-calendar-events"
+              >Number of Events in List:</label
+            >
+            <input
+              class="inputNumber"
               id="number-calendar-events"
               type="number"
               min="1"
@@ -179,16 +184,46 @@ class ScreesaverEditor extends LitElement {
           <ha-icon icon="mdi:check-box-outline"></ha-icon>
           Hide Bar Option
         </h4>
-        <div class="content">
-          ${this._renderHideBarCheckbox()}
-        </div>
+        <div class="content">${this._renderHideBarCheckbox()}</div>
       </ha-expansion-panel>
+
+      <div class="donations" style="display: flex">
+        <a href="https://www.buymeacoffee.com/madmicio" target="_blank"
+          ><img
+            src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png"
+            alt="Buy Me A Coffee"
+            style="height: 60px !important;width: 217px !important;"
+        /></a>
+        <form
+          action="https://www.paypal.com/donate"
+          method="post"
+          target="_top"
+        >
+          <input type="hidden" name="hosted_button_id" value="U5VQ9LHM82B7Q" />
+          <input
+            type="image"
+            src="https://pics.paypal.com/00/s/ODdjZjVlZjAtOWVmYS00NjQyLTkyZTUtNWQ3MmMzMmIxYTcx/file.PNG"
+            border="0"
+            name="submit"
+            title="PayPal - The safer, easier way to pay online!"
+            alt="Donate with PayPal button"
+            style="height:60px;"
+          />
+          <img
+            alt=""
+            border="0"
+            src="https://www.paypal.com/en_IT/i/scr/pixel.gif"
+            width="1"
+            height="1"
+          />
+        </form>
+      </div>
     `;
   }
 
   private _renderHideBarCheckbox() {
     const isHidden = this._config.hide_bar ?? false;
-  
+
     return html`
       <div class="checkbox-container">
         <ha-formfield label="Hide Bar">
@@ -203,19 +238,19 @@ class ScreesaverEditor extends LitElement {
 
   private _toggleHideBar(event: Event) {
     const isChecked = (event.target as HTMLInputElement).checked;
-  
+
     this._config = {
       ...this._config,
       hide_bar: isChecked,
     };
-  
+
     this._dispatchConfigUpdate();
   }
 
   private _updateNumberOfEvents(event: Event) {
     const input = event.target as HTMLInputElement;
     const value = parseInt(input.value, 10);
-  
+
     if (value > 0) {
       this._config = {
         ...this._config,
@@ -224,7 +259,6 @@ class ScreesaverEditor extends LitElement {
       this._dispatchConfigUpdate();
     }
   }
-  
 
   private _renderCalendarSelector() {
     const calendarEntities = this._getCalendarEntities();
@@ -233,20 +267,17 @@ class ScreesaverEditor extends LitElement {
       <div class="select-container">
         <div class="heading">Add Calendar</div>
         <div style="display: flex; align-items: center;">
-          <select 
-            id="calendar_select" 
-            class="select-item"
-          >
+          <select id="calendar_select" class="select-item">
             <option value="">-- Select a Calendar --</option>
             ${calendarEntities.map(
               (entityId: string) =>
-                html`<option value="${entityId}">${this.hass.states[entityId]?.attributes?.friendly_name || entityId}</option>`
+                html`<option value="${entityId}">
+                  ${this.hass.states[entityId]?.attributes?.friendly_name ||
+                  entityId}
+                </option>`
             )}
           </select>
-          <ha-icon
-            icon="mdi:plus"
-            @click=${this._addCalendar}
-          ></ha-icon>
+          <ha-icon icon="mdi:plus" @click=${this._addCalendar}></ha-icon>
         </div>
         ${this._renderCalendarList()}
       </div>
@@ -262,7 +293,10 @@ class ScreesaverEditor extends LitElement {
                 ${(this._config.calendars || []).map(
                   (calendar: string) => html`
                     <div class="val_sel">
-                      <span>${this.hass.states[calendar]?.attributes?.friendly_name || calendar}</span>
+                      <span
+                        >${this.hass.states[calendar]?.attributes
+                          ?.friendly_name || calendar}</span
+                      >
                       <ha-icon
                         icon="mdi:delete"
                         @click=${() => this._removeCalendar(calendar)}
@@ -286,9 +320,9 @@ class ScreesaverEditor extends LitElement {
       const calendarId = selectElement.value;
 
       if (!this._config.calendars?.includes(calendarId)) {
-        this._config = { 
-          ...this._config, 
-          calendars: [...(this._config.calendars || []), calendarId] 
+        this._config = {
+          ...this._config,
+          calendars: [...(this._config.calendars || []), calendarId],
         };
         this._dispatchConfigUpdate();
       }
@@ -314,10 +348,6 @@ class ScreesaverEditor extends LitElement {
       entityId.startsWith("calendar.")
     );
   }
-
-  
-  
-  
 
   private _renderWeatherSelector() {
     const weatherEntities = this._getWeatherEntities();
@@ -350,10 +380,7 @@ class ScreesaverEditor extends LitElement {
       <div class="select-container">
         <div class="heading">Add Entities to value_entity</div>
         <div style="display: flex; align-items: center;">
-          <select 
-            id="value_entity_select" 
-            class="select-item"
-          >
+          <select id="value_entity_select" class="select-item">
             <option value="">-- Select an Entity --</option>
             ${allEntities.map(
               (entityId) =>
@@ -580,83 +607,80 @@ class ScreesaverEditor extends LitElement {
     this._updateEntityIconConfig();
   }
 
- _renderSensorDropdowninternal() {
-  const schema = [
-    {
-      name: "internal_temperature",
-      label: "", // <-- così non mostra "internal_temperature"
-      selector: {
-        entity: { domain: "sensor" },
+  _renderSensorDropdowninternal() {
+    const schema = [
+      {
+        name: "internal_temperature",
+        label: "", // <-- così non mostra "internal_temperature"
+        selector: {
+          entity: { domain: "sensor" },
+        },
       },
-    },
-  ];
+    ];
 
-  const data = {
-    internal_temperature: this._config?.internal_temperature ?? "",
-  };
-
-  return html`
-    <div class="select-container" style="margin-top: 2ch;">
-      <div class="heading">Select Internal Temperature Sensor</div>
-
-      <ha-form
-        .hass=${this.hass}
-        .data=${data}
-        .schema=${schema}
-        .computeLabel=${(s: any) => s.label ?? ""} 
-        @value-changed=${this._onInternalTemperatureChanged}
-      ></ha-form>
-
-    </div>
-  `;
-}
-
-private _onInternalTemperatureChanged(ev: CustomEvent) {
-  const value = ev.detail.value?.internal_temperature as string;
-
-  if (value) {
-    // (opzionale ma consigliato) accetta solo sensori temperature veri
-    const ent = this.hass.states[value];
-    const isTemp = ent?.attributes?.device_class === "temperature";
-
-    if (!isTemp) {
-      this._removeInternalTemperatureSensor();
-      return;
-    }
-
-    this._config = {
-      ...this._config,
-      internal_temperature: value,
+    const data = {
+      internal_temperature: this._config?.internal_temperature ?? "",
     };
-  } else {
-    this._removeInternalTemperatureSensor();
+
+    return html`
+      <div class="select-container" style="margin-top: 2ch;">
+        <div class="heading">Select Internal Temperature Sensor</div>
+
+        <ha-form
+          .hass=${this.hass}
+          .data=${data}
+          .schema=${schema}
+          .computeLabel=${(s: any) => s.label ?? ""}
+          @value-changed=${this._onInternalTemperatureChanged}
+        ></ha-form>
+      </div>
+    `;
   }
 
-  this._dispatchConfigUpdate();
-}
+  private _onInternalTemperatureChanged(ev: CustomEvent) {
+    const value = ev.detail.value?.internal_temperature as string;
 
-_removeInternalTemperatureSensor() {
-  const { internal_temperature, ...newConfig } = this._config;
-  this._config = newConfig;
-  this._dispatchConfigUpdate();
-}
+    if (value) {
+      // (opzionale ma consigliato) accetta solo sensori temperature veri
+      const ent = this.hass.states[value];
+      const isTemp = ent?.attributes?.device_class === "temperature";
 
+      if (!isTemp) {
+        this._removeInternalTemperatureSensor();
+        return;
+      }
+
+      this._config = {
+        ...this._config,
+        internal_temperature: value,
+      };
+    } else {
+      this._removeInternalTemperatureSensor();
+    }
+
+    this._dispatchConfigUpdate();
+  }
+
+  _removeInternalTemperatureSensor() {
+    const { internal_temperature, ...newConfig } = this._config;
+    this._config = newConfig;
+    this._dispatchConfigUpdate();
+  }
 
   _renderSensorDropdownexternal() {
-  const schema = [
-    {
-      name: "external_temperature",
-      label: "",
-      selector: { entity: { domain: "sensor" } },
-    },
-  ];
+    const schema = [
+      {
+        name: "external_temperature",
+        label: "",
+        selector: { entity: { domain: "sensor" } },
+      },
+    ];
 
+    const data = {
+      external_temperature: this._config?.external_temperature ?? "",
+    };
 
-  const data = {
-    external_temperature: this._config?.external_temperature ?? "",
-  };
-
-  return html`
+    return html`
     <div class="select-container" style="margin-top: 2ch;">
       <div class="heading">Select External Temperature Sensor</div>
 
@@ -664,68 +688,59 @@ _removeInternalTemperatureSensor() {
         .hass=${this.hass}
         .data=${data}
         .schema=${schema}
-        .computeLabel=${(s: any) => s.label ?? ""}  // <— NON usare fallback al name
+        .computeLabel=${(s: any) =>
+          s.label ?? ""}  // <— NON usare fallback al name
         @value-changed=${this._onExternalTemperatureChanged}
       ></ha-form>
     </div>
   `;
-}
-
-private _onExternalTemperatureChanged(ev: CustomEvent) {
-  const value = ev.detail.value?.external_temperature as string;
-
-  if (value) {
-    // (opzionale) Validazione: accetta solo device_class temperature
-    const ent = this.hass.states[value];
-    const isTemp = ent?.attributes?.device_class === "temperature";
-
-    if (!isTemp) {
-      // se scegli un sensore non-temperature, lo scartiamo
-      this._removeExternalTemperatureSensor();
-      return;
-    }
-
-    this._config = {
-      ...this._config,
-      external_temperature: value,
-    };
-  } else {
-    this._removeExternalTemperatureSensor();
   }
 
-  this._dispatchConfigUpdate();
-}
+  private _onExternalTemperatureChanged(ev: CustomEvent) {
+    const value = ev.detail.value?.external_temperature as string;
 
-_removeExternalTemperatureSensor() {
-  const { external_temperature, ...newConfig } = this._config;
-  this._config = newConfig;
-  this._dispatchConfigUpdate();
-}
+    if (value) {
+      // (opzionale) Validazione: accetta solo device_class temperature
+      const ent = this.hass.states[value];
+      const isTemp = ent?.attributes?.device_class === "temperature";
 
+      if (!isTemp) {
+        // se scegli un sensore non-temperature, lo scartiamo
+        this._removeExternalTemperatureSensor();
+        return;
+      }
 
+      this._config = {
+        ...this._config,
+        external_temperature: value,
+      };
+    } else {
+      this._removeExternalTemperatureSensor();
+    }
 
+    this._dispatchConfigUpdate();
+  }
 
+  _removeExternalTemperatureSensor() {
+    const { external_temperature, ...newConfig } = this._config;
+    this._config = newConfig;
+    this._dispatchConfigUpdate();
+  }
 
+  _renderSensorDropdownLocalRain() {
+    const schema = [
+      {
+        name: "rain_sensor",
+        label: "",
+        selector: { entity: { domain: "sensor" } },
+      },
+    ];
 
+    const data = {
+      rain_sensor: this._config?.rain_sensor ?? "",
+    };
 
-
-
-
-
-_renderSensorDropdownLocalRain() {
-  const schema = [
-    {
-      name: "rain_sensor",
-      label: "",
-      selector: { entity: { domain: "sensor" } },
-    },
-  ];
-
-  const data = {
-    rain_sensor: this._config?.rain_sensor ?? "",
-  };
-
-  return html`
+    return html`
     <div class="select-container" style="margin-top: 2ch;">
       <div class="heading">Select Local Rain Sensor</div>
 
@@ -733,75 +748,32 @@ _renderSensorDropdownLocalRain() {
         .hass=${this.hass}
         .data=${data}
         .schema=${schema}
-        .computeLabel=${(s: any) => s.label ?? ""}  // <— NON usare fallback al name
+        .computeLabel=${(s: any) =>
+          s.label ?? ""}  // <— NON usare fallback al name
         @value-changed=${this._onRainSensorChanged}
       ></ha-form>
 
       
     </div>
   `;
-}
-
-private _onRainSensorChanged(ev: CustomEvent) {
-  const value = ev.detail.value?.rain_sensor as string;
-
-  if (value) {
-    this._config = { ...this._config, rain_sensor: value };
-  } else {
-    this._removeLocalRainSensor();
   }
-  this._dispatchConfigUpdate();
-}
 
+  private _onRainSensorChanged(ev: CustomEvent) {
+    const value = ev.detail.value?.rain_sensor as string;
 
-
-
+    if (value) {
+      this._config = { ...this._config, rain_sensor: value };
+    } else {
+      this._removeLocalRainSensor();
+    }
+    this._dispatchConfigUpdate();
+  }
 
   _removeLocalRainSensor() {
     const { rain_sensor, ...newConfig } = this._config; // Rimuove la chiave rain_sensor
     this._config = newConfig;
     this._dispatchConfigUpdate();
   }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   _renderLandingPageInput() {
     return html`
